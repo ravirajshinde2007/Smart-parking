@@ -1,0 +1,3535 @@
+/* =========================================================
+   PARKSMART SMART PARKING SYSTEM
+   COMPLETE JAVASCRIPT
+========================================================= */
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const loginFormBox =
+    document.getElementById("loginFormBox");
+
+const registerFormBox =
+    document.getElementById("registerFormBox");
+
+const loginForm =
+    document.getElementById("loginForm");
+
+const registerForm =
+    document.getElementById("registerForm");
+
+const toast =
+    document.getElementById("toast");
+
+const toastMessage =
+    document.getElementById("toastMessage");
+
+const dashboardView =
+    document.getElementById("dashboardView");
+
+const publicView =
+    document.getElementById("publicView");
+
+const driverView =
+    document.getElementById("driverView");
+
+const bookingView =
+    document.getElementById("bookingView");
+
+const adminView =
+    document.getElementById("adminView");
+
+
+/* =========================================================
+   SHOW LOGIN
+========================================================= */
+
+function showLogin() {
+
+    if (registerFormBox) {
+        registerFormBox.classList.remove("active");
+    }
+
+    if (loginFormBox) {
+        loginFormBox.classList.add("active");
+    }
+
+}
+
+
+/* =========================================================
+   SHOW REGISTER
+========================================================= */
+
+function showRegister() {
+
+    if (loginFormBox) {
+        loginFormBox.classList.remove("active");
+    }
+
+    if (registerFormBox) {
+        registerFormBox.classList.add("active");
+    }
+
+}
+
+
+/* =========================================================
+   PASSWORD SHOW / HIDE
+========================================================= */
+
+function togglePassword(inputId, button) {
+
+    const input =
+        document.getElementById(inputId);
+
+    if (!input) {
+        return;
+    }
+
+    if (input.type === "password") {
+
+        input.type = "text";
+
+        button.textContent = "Hide";
+
+    } else {
+
+        input.type = "password";
+
+        button.textContent = "Show";
+
+    }
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(message) {
+
+    if (!toast || !toastMessage) {
+        return;
+    }
+
+    toastMessage.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(function () {
+
+        toast.classList.remove("show");
+
+    }, 3000);
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+if (loginForm) {
+
+    loginForm.addEventListener(
+        "submit",
+        function (event) {
+
+            event.preventDefault();
+
+            const email =
+                document
+                    .getElementById("loginEmail")
+                    .value
+                    .trim();
+
+            const password =
+                document
+                    .getElementById("loginPassword")
+                    .value;
+
+            if (email === "") {
+
+                showToast(
+                    "Please enter your email."
+                );
+
+                return;
+            }
+
+            if (password === "") {
+
+                showToast(
+                    "Please enter your password."
+                );
+
+                return;
+            }
+
+            if (password.length < 6) {
+
+                showToast(
+                    "Password must contain at least 6 characters."
+                );
+
+                return;
+            }
+
+            const registeredEmail =
+                localStorage.getItem(
+                    "parkSmartEmail"
+                );
+
+            if (
+                registeredEmail &&
+                registeredEmail !== email
+            ) {
+
+                showToast(
+                    "Please use your registered email."
+                );
+
+                return;
+            }
+
+            localStorage.setItem(
+                "parkSmartLoggedIn",
+                "true"
+            );
+
+            localStorage.setItem(
+                "parkSmartEmail",
+                email
+            );
+
+            showToast(
+                "Login successful! Welcome to ParkSmart."
+            );
+
+            setTimeout(function () {
+
+                showDashboard();
+
+            }, 1000);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   REGISTRATION
+========================================================= */
+
+if (registerForm) {
+
+    registerForm.addEventListener(
+        "submit",
+        function (event) {
+
+            event.preventDefault();
+
+            const firstName =
+                document
+                    .getElementById("firstName")
+                    .value
+                    .trim();
+
+            const lastName =
+                document
+                    .getElementById("lastName")
+                    .value
+                    .trim();
+
+            const email =
+                document
+                    .getElementById("registerEmail")
+                    .value
+                    .trim();
+
+            const phone =
+                document
+                    .getElementById("phone")
+                    .value
+                    .trim();
+
+            const password =
+                document
+                    .getElementById("registerPassword")
+                    .value;
+
+            const confirmPassword =
+                document
+                    .getElementById("confirmPassword")
+                    .value;
+
+            const terms =
+                document
+                    .getElementById("terms")
+                    .checked;
+
+            if (firstName === "") {
+
+                showToast(
+                    "Enter your first name."
+                );
+
+                return;
+            }
+
+            if (lastName === "") {
+
+                showToast(
+                    "Enter your last name."
+                );
+
+                return;
+            }
+
+            if (email === "") {
+
+                showToast(
+                    "Enter your email address."
+                );
+
+                return;
+            }
+
+            if (phone === "") {
+
+                showToast(
+                    "Enter your mobile number."
+                );
+
+                return;
+            }
+
+            if (password.length < 6) {
+
+                showToast(
+                    "Password must contain at least 6 characters."
+                );
+
+                return;
+            }
+
+            if (password !== confirmPassword) {
+
+                showToast(
+                    "Passwords do not match."
+                );
+
+                return;
+            }
+
+            if (!terms) {
+
+                showToast(
+                    "Please accept the Terms & Conditions."
+                );
+
+                return;
+            }
+
+            localStorage.setItem(
+                "parkSmartFirstName",
+                firstName
+            );
+
+            localStorage.setItem(
+                "parkSmartLastName",
+                lastName
+            );
+
+            localStorage.setItem(
+                "parkSmartEmail",
+                email
+            );
+
+            localStorage.setItem(
+                "parkSmartPhone",
+                phone
+            );
+
+            showToast(
+                "Account created successfully!"
+            );
+
+            setTimeout(function () {
+
+                registerForm.reset();
+
+                showLogin();
+
+                const loginEmail =
+                    document.getElementById(
+                        "loginEmail"
+                    );
+
+                if (loginEmail) {
+                    loginEmail.value = email;
+                }
+
+            }, 1300);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD
+========================================================= */
+
+function forgotPassword() {
+
+    const email =
+        prompt(
+            "Enter your registered email:"
+        );
+
+    if (!email) {
+        return;
+    }
+
+    showToast(
+        "Password reset link sent to " + email
+    );
+
+}
+
+
+/* =========================================================
+   GOOGLE LOGIN
+========================================================= */
+
+function googleLogin() {
+
+    showToast(
+        "Google Login demo activated."
+    );
+
+}
+
+
+/* =========================================================
+   MOUSE PARALLAX BACKGROUND
+========================================================= */
+
+document.addEventListener(
+    "mousemove",
+    function (event) {
+
+        const x =
+            (event.clientX /
+                window.innerWidth -
+                0.5) * 15;
+
+        const y =
+            (event.clientY /
+                window.innerHeight -
+                0.5) * 15;
+
+        const background =
+            document.querySelector(
+                ".background"
+            );
+
+        if (background) {
+
+            background.style.transform =
+                `scale(1.07) translate(${x}px, ${y}px)`;
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   HIDE ALL VIEWS
+========================================================= */
+
+function hideAllViews() {
+
+    if (publicView) {
+        publicView.classList.add("hidden");
+    }
+
+    if (driverView) {
+        driverView.classList.add("hidden");
+    }
+
+    if (bookingView) {
+        bookingView.classList.add("hidden");
+    }
+
+    if (adminView) {
+        adminView.classList.add("hidden");
+    }
+
+    if (dashboardView) {
+        dashboardView.classList.add("hidden");
+    }
+
+}
+
+
+/* =========================================================
+   SHOW DASHBOARD
+========================================================= */
+
+function showDashboard() {
+
+    const authPage =
+        document.getElementById("authPage");
+
+    if (authPage) {
+
+        authPage.style.display = "none";
+
+    }
+
+    if (dashboardView) {
+
+        dashboardView.classList.remove("hidden");
+
+        dashboardView.style.display = "block";
+
+    }
+
+    initializeParkingDashboard();
+
+    displayMyBookings();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+/* =========================================================
+   PARKING DATA
+========================================================= */
+
+const parkingData = [
+
+    {
+        id: 1,
+        name: "City Center Parking",
+        state: "Maharashtra",
+        city: "Nashik",
+        area: "College Road",
+        locality: "College Road",
+        lat: 20.0059,
+        lng: 73.7620,
+        available: 24,
+        capacity: 50,
+        rate: 40
+    },
+
+    {
+        id: 2,
+        name: "Nashik Road Parking",
+        state: "Maharashtra",
+        city: "Nashik",
+        area: "Nashik Road",
+        locality: "Nashik Road",
+        lat: 19.9975,
+        lng: 73.7898,
+        available: 8,
+        capacity: 40,
+        rate: 30
+    },
+
+    {
+        id: 3,
+        name: "CBS Smart Parking",
+        state: "Maharashtra",
+        city: "Nashik",
+        area: "CBS",
+        locality: "CBS",
+        lat: 20.0055,
+        lng: 73.7830,
+        available: 4,
+        capacity: 35,
+        rate: 35
+    },
+
+    {
+        id: 4,
+        name: "FC Road Parking",
+        state: "Maharashtra",
+        city: "Pune",
+        area: "FC Road",
+        locality: "FC Road",
+        lat: 18.5236,
+        lng: 73.8412,
+        available: 5,
+        capacity: 60,
+        rate: 60
+    },
+
+    {
+        id: 5,
+        name: "Pune Central Parking",
+        state: "Maharashtra",
+        city: "Pune",
+        area: "Shivajinagar",
+        locality: "Shivajinagar",
+        lat: 18.5308,
+        lng: 73.8475,
+        available: 31,
+        capacity: 80,
+        rate: 50
+    },
+
+    {
+        id: 6,
+        name: "Andheri Metro Parking",
+        state: "Maharashtra",
+        city: "Mumbai",
+        area: "Andheri",
+        locality: "Andheri",
+        lat: 19.1197,
+        lng: 72.8468,
+        available: 12,
+        capacity: 100,
+        rate: 80
+    },
+
+    {
+        id: 7,
+        name: "Bandra Parking Hub",
+        state: "Maharashtra",
+        city: "Mumbai",
+        area: "Bandra",
+        locality: "Bandra",
+        lat: 19.0607,
+        lng: 72.8362,
+        available: 7,
+        capacity: 75,
+        rate: 90
+    },
+
+    {
+        id: 8,
+        name: "Ahmedabad City Parking",
+        state: "Gujarat",
+        city: "Ahmedabad",
+        area: "Navrangpura",
+        locality: "Navrangpura",
+        lat: 23.0350,
+        lng: 72.5600,
+        available: 28,
+        capacity: 70,
+        rate: 50
+    },
+
+    {
+        id: 9,
+        name: "Surat Central Parking",
+        state: "Gujarat",
+        city: "Surat",
+        area: "Adajan",
+        locality: "Adajan",
+        lat: 21.1959,
+        lng: 72.7933,
+        available: 17,
+        capacity: 60,
+        rate: 40
+    },
+
+    {
+        id: 10,
+        name: "Indore Central Parking",
+        state: "Madhya Pradesh",
+        city: "Indore",
+        area: "Vijay Nagar",
+        locality: "Vijay Nagar",
+        lat: 22.7533,
+        lng: 75.8937,
+        available: 22,
+        capacity: 70,
+        rate: 35
+    },
+
+    {
+        id: 11,
+        name: "Connaught Place Parking",
+        state: "Delhi",
+        city: "New Delhi",
+        area: "Connaught Place",
+        locality: "Connaught Place",
+        lat: 28.6315,
+        lng: 77.2167,
+        available: 9,
+        capacity: 100,
+        rate: 80
+    },
+
+    {
+        id: 12,
+        name: "MG Road Smart Parking",
+        state: "Karnataka",
+        city: "Bengaluru",
+        area: "MG Road",
+        locality: "MG Road",
+        lat: 12.9758,
+        lng: 77.6050,
+        available: 18,
+        capacity: 80,
+        rate: 60
+    }
+
+];
+
+
+/* =========================================================
+   MAP VARIABLES
+========================================================= */
+
+let parkingMap = null;
+
+let parkingMarkers = [];
+
+let currentLocationMarker = null;
+
+let selectedParking = null;
+
+
+/* =========================================================
+   SLOT VARIABLES
+========================================================= */
+
+/*
+   parkingSlots stores the slot information
+   for every parking location.
+
+   Example:
+
+   parkingSlots[1] = [
+       { id: "A1", status: "vacant" },
+       { id: "A2", status: "occupied" },
+       { id: "A3", status: "reserved" }
+   ];
+*/
+
+let parkingSlots = {};
+
+let selectedSlot = null;
+
+let selectedSlotParking = null;
+
+
+/* =========================================================
+   LOCAL STORAGE BOOKING KEY
+========================================================= */
+
+const BOOKING_STORAGE_KEY =
+    "parkSmartBookings";
+
+
+/* =========================================================
+   INITIALIZE PARKING DASHBOARD
+========================================================= */
+
+function initializeParkingDashboard() {
+
+    const mapElement =
+        document.getElementById("parkingMap");
+
+    if (!mapElement) {
+        return;
+    }
+
+    if (parkingMap) {
+        return;
+    }
+
+    parkingMap =
+        L.map("parkingMap").setView(
+            [22.9734, 78.6569],
+            5
+        );
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(parkingMap);
+
+    displayDashboardParking(
+        parkingData
+    );
+
+    displayMyBookings();
+
+}
+
+
+/* =========================================================
+   PARKING STATUS
+========================================================= */
+
+function getParkingStatus(parking) {
+
+    const percentage =
+        (parking.available /
+            parking.capacity) * 100;
+
+    if (parking.available === 0) {
+        return "full";
+    }
+
+    if (percentage <= 20) {
+        return "limited";
+    }
+
+    return "available";
+
+}
+
+
+/* =========================================================
+   CREATE PARKING SLOTS
+========================================================= */
+
+function createParkingSlots(parking) {
+
+    if (parkingSlots[parking.id]) {
+        return parkingSlots[parking.id];
+    }
+
+    const slots = [];
+
+    /*
+       We create slots row-wise.
+
+       Example:
+
+       A1 A2 A3 A4 A5
+       B1 B2 B3 B4 B5
+       C1 C2 C3 C4 C5
+    */
+
+    const columns = 5;
+
+    for (
+        let i = 1;
+        i <= parking.capacity;
+        i++
+    ) {
+
+        const rowNumber =
+            Math.floor(
+                (i - 1) / columns
+            );
+
+        const rowLetter =
+            String.fromCharCode(
+                65 + rowNumber
+            );
+
+        const columnNumber =
+            ((i - 1) % columns) + 1;
+
+        const slotId =
+            rowLetter + columnNumber;
+
+        /*
+           Initial slot status.
+
+           We make exactly parking.available
+           slots vacant.
+
+           The remaining slots are occupied.
+
+           Some occupied slots are shown as
+           reserved for demonstration.
+        */
+
+        let status = "occupied";
+
+        if (i <= parking.available) {
+
+            status = "vacant";
+
+        }
+
+        /*
+           Demo reserved slots.
+
+           Only slots that are not vacant
+           are converted to reserved.
+        */
+
+        if (
+            status === "occupied" &&
+            i % 11 === 0
+        ) {
+
+            status = "reserved";
+
+        }
+
+        slots.push({
+            id: slotId,
+            status: status
+        });
+
+    }
+
+    /*
+       Apply existing localStorage bookings.
+    */
+
+    const bookings =
+        getBookings();
+
+    bookings.forEach(
+        booking => {
+
+            if (
+                Number(booking.parkingId) ===
+                Number(parking.id)
+            ) {
+
+                const slot =
+                    slots.find(
+                        item =>
+                            item.id ===
+                            booking.slotId
+                    );
+
+                if (slot) {
+
+                    slot.status =
+                        "reserved";
+
+                }
+
+            }
+
+        }
+    );
+
+    parkingSlots[parking.id] =
+        slots;
+
+    return slots;
+
+}
+
+
+/* =========================================================
+   GET BOOKINGS FROM LOCAL STORAGE
+========================================================= */
+
+function getBookings() {
+
+    try {
+
+        const storedBookings =
+            localStorage.getItem(
+                BOOKING_STORAGE_KEY
+            );
+
+        if (!storedBookings) {
+            return [];
+        }
+
+        const parsedBookings =
+            JSON.parse(
+                storedBookings
+            );
+
+        if (Array.isArray(parsedBookings)) {
+            return parsedBookings;
+        }
+
+        return [];
+
+    } catch (error) {
+
+        console.error(
+            "Unable to read bookings:",
+            error
+        );
+
+        return [];
+
+    }
+
+}
+
+
+/* =========================================================
+   SAVE BOOKINGS
+========================================================= */
+
+function saveBookings(bookings) {
+
+    localStorage.setItem(
+        BOOKING_STORAGE_KEY,
+        JSON.stringify(bookings)
+    );
+
+}
+
+
+/* =========================================================
+   DISPLAY PARKING LIST
+========================================================= */
+
+function displayDashboardParking(data) {
+
+    const parkingList =
+        document.getElementById(
+            "parkingList"
+        );
+
+    if (!parkingList) {
+        return;
+    }
+
+    parkingList.innerHTML = "";
+
+    if (!data || data.length === 0) {
+
+        parkingList.innerHTML = `
+            <div class="no-parking">
+
+                <h3>
+                    No parking found
+                </h3>
+
+                <p>
+                    Try another city, area,
+                    place or colony.
+                </p>
+
+            </div>
+        `;
+
+        updateDashboardMap([]);
+
+        updateParkingCount(0);
+
+        return;
+
+    }
+
+
+    data.forEach(
+        parking => {
+
+            const status =
+                getParkingStatus(
+                    parking
+                );
+
+            const statusText =
+                status === "available"
+                    ? "Available"
+                    : status === "limited"
+                        ? "Limited"
+                        : "Full";
+
+
+            /*
+               Make sure slots exist.
+            */
+
+            createParkingSlots(
+                parking
+            );
+
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "parking-result";
+
+
+            /*
+               PRICE REMOVED FROM CARD
+               according to your requirement.
+            */
+
+            card.innerHTML = `
+
+                <div class="parking-result-top">
+
+                    <div>
+
+                        <strong>
+                            ${parking.name}
+                        </strong>
+
+                        <small>
+                            📍 ${parking.area},
+                            ${parking.city}
+                        </small>
+
+                    </div>
+
+                    <span
+                        class="parking-status ${status}">
+
+                        ${statusText}
+
+                    </span>
+
+                </div>
+
+
+                <div class="parking-result-bottom">
+
+                    <span class="spaces">
+
+                        🅿️
+                        ${parking.available}
+                        /
+                        ${parking.capacity}
+                        spaces available
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    class="parking-book-btn"
+                    type="button"
+                    onclick="openParkingSlots(${parking.id})">
+
+                    View Slots
+
+                </button>
+
+            `;
+
+
+            parkingList.appendChild(
+                card
+            );
+
+        }
+    );
+
+
+    updateParkingCount(
+        data.length
+    );
+
+    updateDashboardMap(
+        data
+    );
+
+}
+
+
+/* =========================================================
+   UPDATE PARKING COUNT
+========================================================= */
+
+function updateParkingCount(count) {
+
+    const parkingCount =
+        document.getElementById(
+            "parkingCount"
+        );
+
+    if (parkingCount) {
+
+        parkingCount.textContent =
+            `${count} locations`;
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE MAP
+========================================================= */
+
+function updateDashboardMap(data) {
+
+    if (!parkingMap) {
+        return;
+    }
+
+
+    /*
+       Remove old parking markers.
+    */
+
+    parkingMarkers.forEach(
+        marker => {
+
+            parkingMap.removeLayer(
+                marker
+            );
+
+        }
+    );
+
+    parkingMarkers = [];
+
+
+    /*
+       Create new markers.
+    */
+
+    data.forEach(
+        parking => {
+
+            const status =
+                getParkingStatus(
+                    parking
+                );
+
+
+            let color =
+                status === "available"
+                    ? "#22c55e"
+                    : status === "limited"
+                        ? "#f59e0b"
+                        : "#ef4444";
+
+
+            const markerIcon =
+                L.divIcon({
+
+                    className: "",
+
+                    html: `
+                        <div style="
+                            width:18px;
+                            height:18px;
+                            border-radius:50%;
+                            background:${color};
+                            border:3px solid white;
+                            box-shadow:0 3px 12px rgba(0,0,0,.5);
+                        "></div>
+                    `,
+
+                    iconSize: [
+                        18,
+                        18
+                    ],
+
+                    iconAnchor: [
+                        9,
+                        9
+                    ]
+
+                });
+
+
+            const marker =
+                L.marker(
+                    [
+                        parking.lat,
+                        parking.lng
+                    ],
+                    {
+                        icon: markerIcon
+                    }
+                ).addTo(
+                    parkingMap
+                );
+
+
+            /*
+               Map popup now opens
+               the slot system.
+            */
+
+            marker.bindPopup(`
+
+                <div>
+
+                    <strong>
+                        ${parking.name}
+                    </strong>
+
+                    <br>
+
+                    📍
+                    ${parking.area},
+                    ${parking.city}
+
+                    <br><br>
+
+                    🅿️
+                    ${parking.available}
+                    spaces available
+
+                    <br><br>
+
+                    <button
+                        type="button"
+                        onclick="openParkingSlots(${parking.id})">
+
+                        View Slots
+
+                    </button>
+
+                </div>
+
+            `);
+
+
+            parkingMarkers.push(
+                marker
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SEARCH ELEMENTS
+========================================================= */
+
+const parkingSearch =
+    document.getElementById(
+        "parkingSearch"
+    );
+
+const searchLocationBtn =
+    document.getElementById(
+        "searchLocationBtn"
+    );
+
+const clearSearch =
+    document.getElementById(
+        "clearSearch"
+    );
+
+const searchResults =
+    document.getElementById(
+        "searchResults"
+    );
+
+
+/* =========================================================
+   SEARCH PARKING
+========================================================= */
+
+function performParkingSearch() {
+
+    const searchText =
+        parkingSearch
+            ? parkingSearch.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    /*
+       EMPTY SEARCH
+    */
+
+    if (searchText === "") {
+
+        displayDashboardParking(
+            parkingData
+        );
+
+
+        const selectedLocationText =
+            document.getElementById(
+                "selectedLocationText"
+            );
+
+        const parkingHeading =
+            document.getElementById(
+                "parkingHeading"
+            );
+
+
+        if (selectedLocationText) {
+
+            selectedLocationText.textContent =
+                "Showing parking across India";
+
+        }
+
+
+        if (parkingHeading) {
+
+            parkingHeading.textContent =
+                "Parking near you";
+
+        }
+
+
+        if (searchResults) {
+
+            searchResults.innerHTML = "";
+
+        }
+
+
+        if (parkingMap) {
+
+            parkingMap.setView(
+                [
+                    22.9734,
+                    78.6569
+                ],
+                5
+            );
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+       SEARCH NAME, AREA,
+       LOCALITY, CITY AND STATE
+    */
+
+    const results =
+        parkingData.filter(
+            parking => {
+
+                const searchableText = [
+
+                    parking.name,
+
+                    parking.area,
+
+                    parking.locality,
+
+                    parking.city,
+
+                    parking.state
+
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+
+                return searchableText.includes(
+                    searchText
+                );
+
+            }
+        );
+
+
+    displayDashboardParking(
+        results
+    );
+
+
+    /*
+       RESULTS FOUND
+    */
+
+    if (results.length > 0) {
+
+        const firstResult =
+            results[0];
+
+
+        const selectedLocationText =
+            document.getElementById(
+                "selectedLocationText"
+            );
+
+        const parkingHeading =
+            document.getElementById(
+                "parkingHeading"
+            );
+
+
+        if (selectedLocationText) {
+
+            selectedLocationText.textContent =
+                `${firstResult.area}, ${firstResult.city}`;
+
+        }
+
+
+        if (parkingHeading) {
+
+            parkingHeading.textContent =
+                `Parking near ${firstResult.area}`;
+
+        }
+
+
+        if (searchResults) {
+
+            searchResults.innerHTML = `
+
+                <div class="search-result-message">
+
+                    ${results.length}
+                    parking location(s) found
+
+                </div>
+
+            `;
+
+        }
+
+
+        if (parkingMap) {
+
+            parkingMap.setView(
+                [
+                    firstResult.lat,
+                    firstResult.lng
+                ],
+                15
+            );
+
+        }
+
+    }
+
+
+    /*
+       NO RESULTS
+    */
+
+    else {
+
+        const selectedLocationText =
+            document.getElementById(
+                "selectedLocationText"
+            );
+
+        const parkingHeading =
+            document.getElementById(
+                "parkingHeading"
+            );
+
+
+        if (selectedLocationText) {
+
+            selectedLocationText.textContent =
+                "No parking location found";
+
+        }
+
+
+        if (parkingHeading) {
+
+            parkingHeading.textContent =
+                "No Results";
+
+        }
+
+
+        if (searchResults) {
+
+            searchResults.innerHTML = `
+
+                <div class="search-result-message">
+
+                    No parking found for
+                    "${parkingSearch.value.trim()}"
+
+                </div>
+
+            `;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   SEARCH WHILE TYPING
+========================================================= */
+
+if (parkingSearch) {
+
+    parkingSearch.addEventListener(
+        "input",
+        function () {
+
+            const value =
+                this.value.trim();
+
+            if (value === "") {
+
+                performParkingSearch();
+
+                return;
+
+            }
+
+            if (value.length >= 2) {
+
+                performParkingSearch();
+
+            }
+
+        }
+    );
+
+
+    /*
+       ENTER KEY
+    */
+
+    parkingSearch.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                performParkingSearch();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SEARCH BUTTON
+========================================================= */
+
+if (searchLocationBtn) {
+
+    searchLocationBtn.addEventListener(
+        "click",
+        function () {
+
+            performParkingSearch();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLEAR SEARCH
+========================================================= */
+
+if (clearSearch) {
+
+    clearSearch.addEventListener(
+        "click",
+        function () {
+
+            if (parkingSearch) {
+
+                parkingSearch.value = "";
+
+            }
+
+            performParkingSearch();
+
+            if (searchResults) {
+
+                searchResults.innerHTML = "";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CURRENT LOCATION
+========================================================= */
+
+const currentLocationBtn =
+    document.getElementById(
+        "currentLocationBtn"
+    );
+
+
+if (currentLocationBtn) {
+
+    currentLocationBtn.addEventListener(
+        "click",
+        function () {
+
+            if (!navigator.geolocation) {
+
+                showToast(
+                    "Geolocation is not supported by your browser."
+                );
+
+                return;
+
+            }
+
+
+            if (!parkingMap) {
+
+                initializeParkingDashboard();
+
+            }
+
+
+            currentLocationBtn.disabled =
+                true;
+
+            currentLocationBtn.textContent =
+                "📍 Getting Location...";
+
+
+            navigator.geolocation.getCurrentPosition(
+
+                function (position) {
+
+                    const latitude =
+                        position.coords.latitude;
+
+                    const longitude =
+                        position.coords.longitude;
+
+
+                    console.log(
+                        "Current Latitude:",
+                        latitude
+                    );
+
+                    console.log(
+                        "Current Longitude:",
+                        longitude
+                    );
+
+
+                    /*
+                       REMOVE OLD LOCATION MARKER
+                    */
+
+                    if (currentLocationMarker) {
+
+                        parkingMap.removeLayer(
+                            currentLocationMarker
+                        );
+
+                    }
+
+
+                    /*
+                       CREATE LOCATION MARKER
+                    */
+
+                    currentLocationMarker =
+                        L.marker(
+                            [
+                                latitude,
+                                longitude
+                            ]
+                        ).addTo(
+                            parkingMap
+                        );
+
+
+                    currentLocationMarker
+                        .bindPopup(`
+                            <strong>
+                                📍 You are here
+                            </strong>
+                            <br>
+                            Current Location
+                        `)
+                        .openPopup();
+
+
+                    /*
+                       MOVE MAP
+                    */
+
+                    parkingMap.setView(
+                        [
+                            latitude,
+                            longitude
+                        ],
+                        15
+                    );
+
+
+                    /*
+                       UPDATE TEXT
+                    */
+
+                    const selectedLocationText =
+                        document.getElementById(
+                            "selectedLocationText"
+                        );
+
+                    const parkingHeading =
+                        document.getElementById(
+                            "parkingHeading"
+                        );
+
+
+                    if (selectedLocationText) {
+
+                        selectedLocationText.textContent =
+                            "📍 Your current location";
+
+                    }
+
+
+                    if (parkingHeading) {
+
+                        parkingHeading.textContent =
+                            "Parking near your location";
+
+                    }
+
+
+                    /*
+                       CLEAR SEARCH
+                    */
+
+                    if (parkingSearch) {
+
+                        parkingSearch.value = "";
+
+                    }
+
+
+                    if (searchResults) {
+
+                        searchResults.innerHTML = "";
+
+                    }
+
+
+                    /*
+                       SHOW ALL PARKING
+                    */
+
+                    displayDashboardParking(
+                        parkingData
+                    );
+
+
+                    currentLocationBtn.disabled =
+                        false;
+
+                    currentLocationBtn.textContent =
+                        "📍 Use My Current Location";
+
+
+                    showToast(
+                        "Your current location has been found."
+                    );
+
+                },
+
+
+                /*
+                   LOCATION ERROR
+                */
+
+                function (error) {
+
+                    currentLocationBtn.disabled =
+                        false;
+
+                    currentLocationBtn.textContent =
+                        "📍 Use My Current Location";
+
+
+                    if (
+                        error.code ===
+                        error.PERMISSION_DENIED
+                    ) {
+
+                        showToast(
+                            "Location permission denied. Please allow location access."
+                        );
+
+                    }
+
+                    else if (
+                        error.code ===
+                        error.POSITION_UNAVAILABLE
+                    ) {
+
+                        showToast(
+                            "Location unavailable. Turn ON Windows Location and try again."
+                        );
+
+                    }
+
+                    else if (
+                        error.code ===
+                        error.TIMEOUT
+                    ) {
+
+                        showToast(
+                            "Location request timed out. Please try again."
+                        );
+
+                    }
+
+                    else {
+
+                        showToast(
+                            "Unable to get your current location."
+                        );
+
+                    }
+
+                },
+
+
+                /*
+                   GPS OPTIONS
+
+                   Desktop-friendly settings.
+                */
+
+                {
+                    enableHighAccuracy: false,
+                    timeout: 30000,
+                    maximumAge: 60000
+                }
+
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   OPEN PARKING SLOTS
+========================================================= */
+
+function openParkingSlots(parkingId) {
+
+    const parking =
+        parkingData.find(
+            item =>
+                Number(item.id) ===
+                Number(parkingId)
+        );
+
+
+    if (!parking) {
+
+        showToast(
+            "Parking location not found."
+        );
+
+        return;
+
+    }
+
+
+    selectedParking =
+        parking;
+
+    selectedSlot =
+        null;
+
+    selectedSlotParking =
+        parking;
+
+
+    /*
+       Create slots.
+    */
+
+    const slots =
+        createParkingSlots(
+            parking
+        );
+
+
+    /*
+       UPDATE SLOT SECTION
+    */
+
+    const selectedParkingName =
+        document.getElementById(
+            "selectedParkingName"
+        );
+
+    const selectedParkingLocation =
+        document.getElementById(
+            "selectedParkingLocation"
+        );
+
+
+    if (selectedParkingName) {
+
+        selectedParkingName.textContent =
+            parking.name;
+
+    }
+
+
+    if (selectedParkingLocation) {
+
+        selectedParkingLocation.textContent =
+            `📍 ${parking.area}, ${parking.city}`;
+
+    }
+
+
+    /*
+       DISPLAY INLINE SLOT SECTION
+    */
+
+    const parkingSlotSection =
+        document.getElementById(
+            "parkingSlotSection"
+        );
+
+
+    if (parkingSlotSection) {
+
+        parkingSlotSection.classList.remove(
+            "hidden"
+        );
+
+        parkingSlotSection.style.display =
+            "block";
+
+    }
+
+
+    /*
+       DISPLAY SLOTS IN INLINE SECTION
+    */
+
+    displayParkingSlots(
+        parking
+    );
+
+
+    /*
+       OPEN MODAL ALSO
+       This gives the user a clear
+       slot-selection popup.
+    */
+
+    const slotModal =
+        document.getElementById(
+            "slotModal"
+        );
+
+
+    if (slotModal) {
+
+        slotModal.classList.remove(
+            "hidden"
+        );
+
+        slotModal.classList.add(
+            "show"
+        );
+
+        slotModal.style.display =
+            "flex";
+
+    }
+
+
+    const slotParkingName =
+        document.getElementById(
+            "slotParkingName"
+        );
+
+    const slotParkingLocation =
+        document.getElementById(
+            "slotParkingLocation"
+        );
+
+
+    if (slotParkingName) {
+
+        slotParkingName.textContent =
+            parking.name;
+
+    }
+
+
+    if (slotParkingLocation) {
+
+        slotParkingLocation.textContent =
+            `📍 ${parking.area}, ${parking.city}`;
+
+    }
+
+
+    /*
+       Display slots inside modal.
+    */
+
+    displayModalParkingSlots(
+        parking,
+        slots
+    );
+
+
+    /*
+       Scroll to slot section.
+    */
+
+    setTimeout(function () {
+
+        if (parkingSlotSection) {
+
+            parkingSlotSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        }
+
+    }, 100);
+
+}
+
+
+/* =========================================================
+   DISPLAY INLINE PARKING SLOTS
+========================================================= */
+
+function displayParkingSlots(parking) {
+
+    const grid =
+        document.getElementById(
+            "parkingSlotGrid"
+        );
+
+
+    if (!grid) {
+        return;
+    }
+
+
+    grid.innerHTML = "";
+
+
+    const slots =
+        createParkingSlots(
+            parking
+        );
+
+
+    slots.forEach(
+        slot => {
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.className =
+                "parking-slot-button " +
+                `dashboard-slot ${slot.status}`;
+
+
+            button.textContent =
+                slot.id;
+
+
+            /*
+               Add title.
+            */
+
+            if (slot.status === "vacant") {
+
+                button.title =
+                    "Vacant - Click to select";
+
+            }
+
+            else if (
+                slot.status === "occupied"
+            ) {
+
+                button.title =
+                    "Occupied";
+
+                button.disabled =
+                    true;
+
+            }
+
+            else if (
+                slot.status === "reserved"
+            ) {
+
+                button.title =
+                    "Reserved";
+
+                button.disabled =
+                    true;
+
+            }
+
+
+            /*
+               SELECT SLOT
+            */
+
+            if (slot.status === "vacant") {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        selectParkingSlot(
+                            parking,
+                            slot
+                        );
+
+                    }
+                );
+
+            }
+
+
+            grid.appendChild(
+                button
+            );
+
+        }
+    );
+
+
+    updateSelectedSlotUI();
+
+}
+
+
+/* =========================================================
+   DISPLAY MODAL PARKING SLOTS
+========================================================= */
+
+function displayModalParkingSlots(
+    parking,
+    slots
+) {
+
+    const grid =
+        document.getElementById(
+            "modalSlotGrid"
+        );
+
+
+    if (!grid) {
+        return;
+    }
+
+
+    grid.innerHTML = "";
+
+
+    slots.forEach(
+        slot => {
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.className =
+                "parking-slot-button " +
+                `dashboard-slot ${slot.status}`;
+
+
+            button.textContent =
+                slot.id;
+
+
+            if (slot.status === "vacant") {
+
+                button.title =
+                    "Vacant - Click to select";
+
+            }
+
+
+            if (
+                slot.status === "occupied" ||
+                slot.status === "reserved"
+            ) {
+
+                button.disabled =
+                    true;
+
+            }
+
+
+            if (slot.status === "vacant") {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        selectParkingSlot(
+                            parking,
+                            slot
+                        );
+
+                    }
+                );
+
+            }
+
+
+            grid.appendChild(
+                button
+            );
+
+        }
+    );
+
+
+    updateSelectedSlotUI();
+
+}
+
+
+/* =========================================================
+   SELECT PARKING SLOT
+========================================================= */
+
+function selectParkingSlot(
+    parking,
+    slot
+) {
+
+    /*
+       Safety check.
+    */
+
+    if (
+        !parking ||
+        !slot ||
+        slot.status !== "vacant"
+    ) {
+
+        return;
+
+    }
+
+
+    selectedParking =
+        parking;
+
+    selectedSlotParking =
+        parking;
+
+    selectedSlot =
+        slot;
+
+
+    updateSelectedSlotUI();
+
+
+    /*
+       Highlight the slot
+       in both grids.
+    */
+
+    refreshSlotDisplays();
+
+
+    showToast(
+        `Slot ${slot.id} selected.`
+    );
+
+}
+
+
+/* =========================================================
+   REFRESH BOTH SLOT DISPLAYS
+========================================================= */
+
+function refreshSlotDisplays() {
+
+    if (!selectedParking) {
+        return;
+    }
+
+
+    const parking =
+        selectedParking;
+
+
+    displayParkingSlots(
+        parking
+    );
+
+
+    const slots =
+        createParkingSlots(
+            parking
+        );
+
+
+    displayModalParkingSlots(
+        parking,
+        slots
+    );
+
+
+    /*
+       Re-apply selected style.
+    */
+
+    if (selectedSlot) {
+
+        document
+            .querySelectorAll(
+                ".dashboard-slot"
+            )
+            .forEach(
+                element => {
+
+                    if (
+                        element.textContent.trim() ===
+                        selectedSlot.id
+                    ) {
+
+                        element.classList.add(
+                            "selected"
+                        );
+
+                        element.classList.remove(
+                            "vacant"
+                        );
+
+                    }
+
+                }
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE SELECTED SLOT UI
+========================================================= */
+
+function updateSelectedSlotUI() {
+
+    const selectedSlotName =
+        document.getElementById(
+            "selectedSlotName"
+        );
+
+    const modalSelectedSlot =
+        document.getElementById(
+            "modalSelectedSlot"
+        );
+
+    const bookSelectedSlot =
+        document.getElementById(
+            "bookSelectedSlot"
+        );
+
+    const modalBookSlot =
+        document.getElementById(
+            "modalBookSlot"
+        );
+
+
+    const slotText =
+        selectedSlot
+            ? selectedSlot.id
+            : "None";
+
+
+    if (selectedSlotName) {
+
+        selectedSlotName.textContent =
+            slotText;
+
+    }
+
+
+    if (modalSelectedSlot) {
+
+        modalSelectedSlot.textContent =
+            slotText;
+
+    }
+
+
+    const hasSelection =
+        Boolean(
+            selectedSlot &&
+            selectedSlotParking
+        );
+
+
+    if (bookSelectedSlot) {
+
+        bookSelectedSlot.disabled =
+            !hasSelection;
+
+    }
+
+
+    if (modalBookSlot) {
+
+        modalBookSlot.disabled =
+            !hasSelection;
+
+    }
+
+}
+
+
+/* =========================================================
+   BOOK SELECTED SLOT
+========================================================= */
+
+function bookSelectedParkingSlot() {
+
+    if (
+        !selectedSlot ||
+        !selectedSlotParking
+    ) {
+
+        showToast(
+            "Please select a vacant parking slot first."
+        );
+
+        return;
+
+    }
+
+
+    const parking =
+        selectedSlotParking;
+
+
+    const slots =
+        createParkingSlots(
+            parking
+        );
+
+
+    const slot =
+        slots.find(
+            item =>
+                item.id ===
+                selectedSlot.id
+        );
+
+
+    if (!slot) {
+
+        showToast(
+            "Selected slot could not be found."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Make sure slot is still vacant.
+    */
+
+    if (slot.status !== "vacant") {
+
+        showToast(
+            "This slot is no longer available."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Change slot to reserved.
+    */
+
+    slot.status =
+        "reserved";
+
+
+    /*
+       Reduce available spaces.
+    */
+
+    if (parking.available > 0) {
+
+        parking.available--;
+
+    }
+
+
+    /*
+       Create booking ID.
+    */
+
+    const bookingId =
+        "PS" +
+        Math.floor(
+            100000 +
+            Math.random() * 900000
+        );
+
+
+    /*
+       Booking object.
+    */
+
+    const booking = {
+
+        id: bookingId,
+
+        parkingId:
+            parking.id,
+
+        parkingName:
+            parking.name,
+
+        parkingArea:
+            parking.area,
+
+        parkingCity:
+            parking.city,
+
+        slotId:
+            selectedSlot.id,
+
+        status:
+            "Reserved",
+
+        createdAt:
+            new Date().toLocaleString()
+
+    };
+
+
+    /*
+       Save booking.
+    */
+
+    const bookings =
+        getBookings();
+
+
+    bookings.push(
+        booking
+    );
+
+
+    saveBookings(
+        bookings
+    );
+
+
+    /*
+       Update parking list.
+    */
+
+    displayDashboardParking(
+        getCurrentlyDisplayedParking()
+    );
+
+
+    /*
+       Display bookings.
+    */
+
+    displayMyBookings();
+
+
+    /*
+       Set success modal ID.
+    */
+
+    const bookingIdElement =
+        document.getElementById(
+            "bookingId"
+        );
+
+
+    if (bookingIdElement) {
+
+        bookingIdElement.textContent =
+            bookingId;
+
+    }
+
+
+    /*
+       Close slot modal.
+    */
+
+    closeSlotModal();
+
+
+    /*
+       Clear selected slot.
+    */
+
+    selectedSlot =
+        null;
+
+
+    selectedSlotParking =
+        null;
+
+
+    updateSelectedSlotUI();
+
+
+    refreshSlotDisplays();
+
+
+    /*
+       Show success modal.
+    */
+
+    const successModal =
+        document.getElementById(
+            "successModal"
+        );
+
+
+    if (successModal) {
+
+        successModal.classList.add(
+            "show"
+        );
+
+    }
+
+
+    showToast(
+        "Parking slot booked successfully!"
+    );
+
+}
+
+
+/* =========================================================
+   GET CURRENTLY DISPLAYED PARKING
+========================================================= */
+
+function getCurrentlyDisplayedParking() {
+
+    const searchText =
+        parkingSearch
+            ? parkingSearch.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    if (searchText === "") {
+
+        return parkingData;
+
+    }
+
+
+    return parkingData.filter(
+        parking => {
+
+            const searchableText = [
+
+                parking.name,
+                parking.area,
+                parking.locality,
+                parking.city,
+                parking.state
+
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+            return searchableText.includes(
+                searchText
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   BOOK BUTTONS
+========================================================= */
+
+const bookSelectedSlotButton =
+    document.getElementById(
+        "bookSelectedSlot"
+    );
+
+
+if (bookSelectedSlotButton) {
+
+    bookSelectedSlotButton.addEventListener(
+        "click",
+        function () {
+
+            bookSelectedParkingSlot();
+
+        }
+    );
+
+}
+
+
+const modalBookSlot =
+    document.getElementById(
+        "modalBookSlot"
+    );
+
+
+if (modalBookSlot) {
+
+    modalBookSlot.addEventListener(
+        "click",
+        function () {
+
+            bookSelectedParkingSlot();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE SLOT MODAL
+========================================================= */
+
+function closeSlotModal() {
+
+    const slotModal =
+        document.getElementById(
+            "slotModal"
+        );
+
+
+    if (slotModal) {
+
+        slotModal.classList.remove(
+            "show"
+        );
+
+        slotModal.classList.add(
+            "hidden"
+        );
+
+        slotModal.style.display =
+            "none";
+
+    }
+
+}
+
+
+/* =========================================================
+   SLOT MODAL CLOSE BUTTON
+========================================================= */
+
+const slotModalClose =
+    document.getElementById(
+        "slotModalClose"
+    );
+
+
+if (slotModalClose) {
+
+    slotModalClose.addEventListener(
+        "click",
+        function () {
+
+            closeSlotModal();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE SLOT SECTION
+========================================================= */
+
+const closeSlotSection =
+    document.getElementById(
+        "closeSlotSection"
+    );
+
+
+if (closeSlotSection) {
+
+    closeSlotSection.addEventListener(
+        "click",
+        function () {
+
+            const section =
+                document.getElementById(
+                    "parkingSlotSection"
+                );
+
+            if (section) {
+
+                section.classList.add(
+                    "hidden"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE MODAL WHEN CLICKING OUTSIDE
+========================================================= */
+
+const slotModal =
+    document.getElementById(
+        "slotModal"
+    );
+
+
+if (slotModal) {
+
+    slotModal.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                event.target ===
+                slotModal
+            ) {
+
+                closeSlotModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DISPLAY MY BOOKINGS
+========================================================= */
+
+function displayMyBookings() {
+
+    const list =
+        document.getElementById(
+            "myBookingsList"
+        );
+
+    const count =
+        document.getElementById(
+            "bookingCount"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    const bookings =
+        getBookings();
+
+
+    if (count) {
+
+        count.textContent =
+            `${bookings.length} ${
+                bookings.length === 1
+                    ? "booking"
+                    : "bookings"
+            }`;
+
+    }
+
+
+    if (bookings.length === 0) {
+
+        list.innerHTML = `
+
+            <div class="no-bookings">
+
+                <div class="no-bookings-icon">
+                    🅿️
+                </div>
+
+                <p>
+                    You don't have any reserved parking slots.
+                </p>
+
+                <small>
+                    Select a parking location
+                    and book a vacant slot.
+                </small>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    list.innerHTML = "";
+
+
+    bookings.forEach(
+        booking => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "booking-card";
+
+
+            card.innerHTML = `
+
+                <div class="booking-card-header">
+
+                    <div>
+
+                        <strong>
+                            ${booking.parkingName}
+                        </strong>
+
+                        <small>
+                            📍
+                            ${booking.parkingArea},
+                            ${booking.parkingCity}
+                        </small>
+
+                    </div>
+
+                    <span class="booking-status">
+                        🟡 Reserved
+                    </span>
+
+                </div>
+
+
+                <div class="booking-card-details">
+
+                    <div>
+
+                        <span>
+                            Parking Slot
+                        </span>
+
+                        <strong>
+                            ${booking.slotId}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Booking ID
+                        </span>
+
+                        <strong>
+                            ${booking.id}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Booked On
+                        </span>
+
+                        <strong>
+                            ${booking.createdAt}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="cancel-booking-btn"
+                    onclick="cancelParkingBooking('${booking.id}')">
+
+                    Cancel Reservation
+
+                </button>
+
+            `;
+
+
+            list.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CANCEL PARKING BOOKING
+========================================================= */
+
+function cancelParkingBooking(
+    bookingId
+) {
+
+    const bookings =
+        getBookings();
+
+
+    const booking =
+        bookings.find(
+            item =>
+                item.id ===
+                bookingId
+        );
+
+
+    if (!booking) {
+
+        showToast(
+            "Booking not found."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `Cancel reservation for slot ${booking.slotId}?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    /*
+       Remove booking.
+    */
+
+    const remainingBookings =
+        bookings.filter(
+            item =>
+                item.id !==
+                bookingId
+        );
+
+
+    saveBookings(
+        remainingBookings
+    );
+
+
+    /*
+       Find parking.
+    */
+
+    const parking =
+        parkingData.find(
+            item =>
+                Number(item.id) ===
+                Number(booking.parkingId)
+        );
+
+
+    if (parking) {
+
+        /*
+           Increase available count.
+        */
+
+        parking.available++;
+
+
+        /*
+           Change slot back to vacant.
+        */
+
+        const slots =
+            createParkingSlots(
+                parking
+            );
+
+
+        const slot =
+            slots.find(
+                item =>
+                    item.id ===
+                    booking.slotId
+            );
+
+
+        if (slot) {
+
+            slot.status =
+                "vacant";
+
+        }
+
+    }
+
+
+    /*
+       Refresh parking list.
+    */
+
+    displayDashboardParking(
+        getCurrentlyDisplayedParking()
+    );
+
+
+    /*
+       Refresh bookings.
+    */
+
+    displayMyBookings();
+
+
+    /*
+       Refresh currently opened slot system.
+    */
+
+    if (
+        selectedParking &&
+        Number(selectedParking.id) ===
+        Number(booking.parkingId)
+    ) {
+
+        displayParkingSlots(
+            selectedParking
+        );
+
+        displayModalParkingSlots(
+            selectedParking,
+            createParkingSlots(
+                selectedParking
+            )
+        );
+
+    }
+
+
+    showToast(
+        `Reservation for slot ${booking.slotId} cancelled.`
+    );
+
+}
+
+
+/* =========================================================
+   SUCCESS MODAL
+========================================================= */
+
+const doneButton =
+    document.getElementById(
+        "doneButton"
+    );
+
+
+if (doneButton) {
+
+    doneButton.addEventListener(
+        "click",
+        function () {
+
+            const successModal =
+                document.getElementById(
+                    "successModal"
+                );
+
+
+            if (successModal) {
+
+                successModal.classList.remove(
+                    "show"
+                );
+
+            }
+
+
+            /*
+               Scroll to My Bookings.
+            */
+
+            const myBookingsSection =
+                document.getElementById(
+                    "myBookingsSection"
+                );
+
+
+            if (myBookingsSection) {
+
+                myBookingsSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   PROFILE DROPDOWN
+========================================================= */
+
+const profileButton =
+    document.getElementById(
+        "profileButton"
+    );
+
+
+if (profileButton) {
+
+    profileButton.addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+
+            const profileDropdown =
+                document.getElementById(
+                    "profileDropdown"
+                );
+
+
+            if (profileDropdown) {
+
+                profileDropdown.classList.toggle(
+                    "show"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE PROFILE DROPDOWN
+========================================================= */
+
+document.addEventListener(
+    "click",
+    function () {
+
+        const profileDropdown =
+            document.getElementById(
+                "profileDropdown"
+            );
+
+
+        if (profileDropdown) {
+
+            profileDropdown.classList.remove(
+                "show"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+const logoutButton =
+    document.getElementById(
+        "logoutButton"
+    );
+
+
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        function () {
+
+            const logout =
+                confirm(
+                    "Do you want to logout?"
+                );
+
+
+            if (!logout) {
+                return;
+            }
+
+
+            localStorage.setItem(
+                "parkSmartLoggedIn",
+                "false"
+            );
+
+
+            if (dashboardView) {
+
+                dashboardView.classList.add(
+                    "hidden"
+                );
+
+                dashboardView.style.display =
+                    "none";
+
+            }
+
+
+            const authPage =
+                document.getElementById(
+                    "authPage"
+                );
+
+
+            if (authPage) {
+
+                authPage.style.display =
+                    "flex";
+
+            }
+
+
+            showLogin();
+
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+
+            showToast(
+                "You have been logged out."
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CHECK EXISTING LOGIN
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const loggedIn =
+            localStorage.getItem(
+                "parkSmartLoggedIn"
+            );
+
+
+        /*
+           We don't automatically show dashboard
+           here so that the login screen remains
+           visible after refreshing unless the user
+           has explicitly logged in during the session.
+        */
+
+        if (loggedIn === "true") {
+
+            /*
+               Uncomment the next line if you want
+               automatic login after page refresh.
+
+               showDashboard();
+            */
+
+        }
+
+    }
+);

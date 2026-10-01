@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ParkSmart</title>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         ANIMATED BACKGROUND
+    ====================================================== -->
+
+    <div class="background">
+
+        <div class="background-overlay"></div>
+
+        <div class="light light-one"></div>
+        <div class="light light-two"></div>
+        <div class="light light-three"></div>
+
+        <div class="particle particle-one"></div>
+        <div class="particle particle-two"></div>
+        <div class="particle particle-three"></div>
+        <div class="particle particle-four"></div>
+        <div class="particle particle-five"></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         AUTHENTICATION PAGE
+    ====================================================== -->
+
+    <main id="authPage" class="auth-page">
+
+        <div class="auth-wrapper">
+
+            <!-- BRAND -->
+
+            <div class="brand">
+
+                <div class="brand-logo">
+                    P
+                </div>
+
+                <div class="brand-text">
+                    <strong>ParkSmart</strong>
+                    <span>SMART PARKING SYSTEM</span>
+                </div>
+
+            </div>
+
+
+            <!-- AUTH CARD -->
+
+            <div class="auth-card">
+
+                <!-- =================================================
+                     LOGIN FORM
+                ================================================== -->
+
+                <div id="loginFormBox"
+                     class="form-box active">
+
+                    <div class="auth-heading">
+
+                        <span class="welcome">
+                            WELCOME BACK
+                        </span>
+
+                        <h1>
+                            Login to ParkSmart
+                        </h1>
+
+                        <p>
+                            Find your parking space faster
+                            and park smarter.
+                        </p>
+
+                    </div>
+
+
+                    <form id="loginForm">
+
+                        <!-- EMAIL -->
+
+                        <div class="input-group">
+
+                            <label>
+                                Email Address
+                            </label>
+
+                            <div class="input-box">
+
+                                <span class="input-icon">
+                                    ✉
+                                </span>
+
+                                <input
+                                    type="email"
+                                    id="loginEmail"
+                                    placeholder="Enter your email"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PASSWORD -->
+
+                        <div class="input-group">
+
+                            <label>
+                                Password
+                            </label>
+
+                            <div class="input-box">
+
+                                <span class="input-icon">
+                                    🔒
+                                </span>
+
+                                <input
+                                    type="password"
+                                    id="loginPassword"
+                                    placeholder="Enter your password"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="show-password"
+                                    onclick="togglePassword('loginPassword', this)">
+
+                                    Show
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- OPTIONS -->
+
+                        <div class="form-options">
+
+                            <label class="remember">
+
+                                <input
+                                    type="checkbox"
+                                    id="rememberMe"
+                                >
+
+                                <span>
+                                    Remember me
+                                </span>
+
+                            </label>
+
+
+                            <a href="#"
+                               onclick="forgotPassword(); return false;">
+
+                                Forgot Password?
+
+                            </a>
+
+                        </div>
+
+
+                        <!-- LOGIN BUTTON -->
+
+                        <button
+                            type="submit"
+                            class="main-button">
+
+                            <span>
+                                Login
+                            </span>
+
+                            <span class="button-arrow">
+                                →
+                            </span>
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- DIVIDER -->
+
+                    <div class="divider">
+
+                        <span></span>
+
+                        <p>OR</p>
+
+                        <span></span>
+
+                    </div>
+
+
+                    <!-- GOOGLE LOGIN -->
+
+                    <button
+                        type="button"
+                        class="google-button"
+                        onclick="googleLogin()">
+
+                        <span class="google-icon">
+                            G
+                        </span>
+
+                        Continue with Google
+
+                    </button>
+
+
+                    <!-- REGISTER SWITCH -->
+
+                    <div class="switch-text">
+
+                        Don't have an account?
+
+                        <button
+                            type="button"
+                            onclick="showRegister()">
+
+                            Create Account
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     REGISTER FORM
+                ================================================== -->
+
+                <div id="registerFormBox"
+                     class="form-box">
+
+                    <div class="auth-heading">
+
+                        <span class="welcome">
+                            GET STARTED
+                        </span>
+
+                        <h1>
+                            Create Account
+                        </h1>
+
+                        <p>
+                            Register today and experience
+                            smarter parking.
+                        </p>
+
+                    </div>
+
+
+                    <form id="registerForm">
+
+                        <!-- FIRST + LAST NAME -->
+
+                        <div class="two-column">
+
+                            <div class="input-group">
+
+                                <label>
+                                    First Name
+                                </label>
+
+                                <div class="input-box">
+
+                                    <span class="input-icon">
+                                        👤
+                                    </span>
+
+                                    <input
+                                        type="text"
+                                        id="firstName"
+                                        placeholder="First name"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="input-group">
+
+                                <label>
+                                    Last Name
+                                </label>
+
+                                <div class="input-box">
+
+                                    <input
+                                        type="text"
+                                        id="lastName"
+                                        placeholder="Last name"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="input-group">
+
+                            <label>
+                                Email Address
+                            </label>
+
+                            <div class="input-box">
+
+                                <span class="input-icon">
+                                    ✉
+                                </span>
+
+                                <input
+                                    type="email"
+                                    id="registerEmail"
+                                    placeholder="Enter your email"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div class="input-group">
+
+                            <label>
+                                Mobile Number
+                            </label>
+
+                            <div class="input-box">
+
+                                <span class="input-icon">
+                                    ☎
+                                </span>
+
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    placeholder="+91 98765 43210"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PASSWORD -->
+
+                        <div class="input-group">
+
+                            <label>
+                                Password
+                            </label>
+
+                            <div class="input-box">
+
+                                <span class="input-icon">
+                                    🔒
+                                </span>
+
+                                <input
+                                    type="password"
+                                    id="registerPassword"
+                                    placeholder="Create password"
+                                    minlength="6"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="show-password"
+                                    onclick="togglePassword('registerPassword', this)">
+
+                                    Show
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CONFIRM PASSWORD -->
+
+                        <div class="input-group">
+
+                            <label>
+                                Confirm Password
+                            </label>
+
+                            <div class="input-box">
+
+                                <span class="input-icon">
+                                    🔐
+                                </span>
+
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    placeholder="Confirm password"
+                                    required
+                                >
+
+                                <button
+                                    type="button"
+                                    class="show-password"
+                                    onclick="togglePassword('confirmPassword', this)">
+
+                                    Show
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TERMS -->
+
+                        <label class="terms">
+
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                required
+                            >
+
+                            <span>
+
+                                I agree to the
+
+                                <a href="#">
+                                    Terms & Conditions
+                                </a>
+
+                                and
+
+                                <a href="#">
+                                    Privacy Policy
+                                </a>
+
+                            </span>
+
+                        </label>
+
+
+                        <!-- REGISTER BUTTON -->
+
+                        <button
+                            type="submit"
+                            class="main-button">
+
+                            <span>
+                                Create Account
+                            </span>
+
+                            <span class="button-arrow">
+                                →
+                            </span>
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- LOGIN SWITCH -->
+
+                    <div class="switch-text">
+
+                        Already have an account?
+
+                        <button
+                            type="button"
+                            onclick="showLogin()">
+
+                            Login
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SECURITY TEXT -->
+
+            <div class="security-text">
+
+                <span class="security-icon">
+                    🔐
+                </span>
+
+                Your information is protected with
+                secure authentication.
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         TOAST MESSAGE
+    ====================================================== -->
+
+    <div id="toast"
+         class="toast">
+
+        <span id="toastIcon">
+            ✓
+        </span>
+
+        <span id="toastMessage">
+            Success
+        </span>
+
+    </div>
+
+
+    <!-- =====================================================
+         PARKSMART DASHBOARD
+    ====================================================== -->
+
+    <section id="dashboardView"
+             class="dashboard-view hidden">
+
+
+        <!-- =================================================
+             DASHBOARD HEADER
+        ================================================== -->
+
+        <header class="dashboard-header">
+
+            <div class="dashboard-title">
+
+                <h1>
+                    Find Parking
+                </h1>
+
+                <p>
+                    Find available parking near your destination.
+                </p>
+
+            </div>
+
+
+            <div class="dashboard-header-actions">
+
+                <!-- NOTIFICATION -->
+
+                <button
+                    type="button"
+                    class="dashboard-notification">
+
+                    🔔
+
+                    <span></span>
+
+                </button>
+
+
+                <!-- PROFILE -->
+
+                <div class="dashboard-profile">
+
+                    <button
+                        type="button"
+                        class="profile-button"
+                        id="profileButton">
+
+                        <div class="profile-avatar">
+                            R
+                        </div>
+
+                        <div class="profile-name">
+
+                            <strong>
+                                Raviraj
+                            </strong>
+
+                            <small>
+                                Driver
+                            </small>
+
+                        </div>
+
+                        <span>
+                            ⌄
+                        </span>
+
+                    </button>
+
+
+                    <!-- PROFILE DROPDOWN -->
+
+                    <div
+                        class="profile-dropdown"
+                        id="profileDropdown">
+
+                        <div class="profile-user">
+
+                            <div class="large-profile-avatar">
+                                R
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Raviraj Shinde
+                                </strong>
+
+                                <small>
+                                    raviraj@gmail.com
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="profile-divider"></div>
+
+
+                        <button type="button">
+                            👤 My Profile
+                        </button>
+
+                        <button type="button">
+                            ⚙️ Settings
+                        </button>
+
+                        <button
+                            id="logoutButton"
+                            class="logout-button"
+                            type="button">
+
+                            🚪 Logout
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             PARKING SEARCH
+        ================================================== -->
+
+        <section class="dashboard-search-card">
+
+            <div class="dashboard-search-heading">
+
+                <div>
+
+                    <span class="dashboard-label">
+                        PARKING SEARCH
+                    </span>
+
+                    <h2>
+                        Where do you want to park?
+                    </h2>
+
+                </div>
+
+
+                <!-- CURRENT LOCATION -->
+
+                <button
+                    id="currentLocationBtn"
+                    class="current-location-btn"
+                    type="button">
+
+                    📍 Use My Current Location
+
+                </button>
+
+            </div>
+
+
+            <!-- SEARCH -->
+
+            <div class="location-search">
+
+                <span>
+                    🔍
+                </span>
+
+                <input
+                    type="text"
+                    id="parkingSearch"
+                    placeholder="Search city, area, place or colony..."
+                    autocomplete="off"
+                >
+
+
+                <button
+                    id="searchLocationBtn"
+                    type="button">
+
+                    Search
+
+                </button>
+
+
+                <button
+                    id="clearSearch"
+                    type="button">
+
+                    ×
+
+                </button>
+
+
+                <!-- SEARCH RESULTS -->
+
+                <div
+                    id="searchResults"
+                    class="location-search-results">
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MAP + PARKING LIST
+        ================================================== -->
+
+        <section class="dashboard-main-grid">
+
+
+            <!-- =================================================
+                 MAP
+            ================================================== -->
+
+            <div class="dashboard-map-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+
+                        <span class="dashboard-label">
+                            LIVE MAP
+                        </span>
+
+                        <h2>
+                            Parking Map
+                        </h2>
+
+                        <p id="selectedLocationText">
+                            Showing parking across India
+                        </p>
+
+                    </div>
+
+
+                    <!-- MAP LEGEND -->
+
+                    <div class="map-legend">
+
+                        <span>
+                            <i class="available-dot"></i>
+                            Available
+                        </span>
+
+                        <span>
+                            <i class="limited-dot"></i>
+                            Limited
+                        </span>
+
+                        <span>
+                            <i class="full-dot"></i>
+                            Full
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- LEAFLET MAP -->
+
+                <div
+                    id="parkingMap"
+                    class="dashboard-map">
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PARKING LIST
+            ================================================== -->
+
+            <div class="dashboard-parking-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+
+                        <span class="dashboard-label">
+                            AVAILABLE PARKING
+                        </span>
+
+                        <h2 id="parkingHeading">
+                            Parking near you
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="parkingCount"
+                        class="parking-count">
+
+                        0 locations
+
+                    </span>
+
+                </div>
+
+
+                <!-- JAVASCRIPT WILL GENERATE PARKING CARDS HERE -->
+
+                <div
+                    id="parkingList"
+                    class="parking-list">
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             PARKING SLOT SECTION
+             
+             This section can be used to display the selected
+             parking area's slots directly on the dashboard.
+        ====================================================== -->
+
+        <section
+            id="parkingSlotSection"
+            class="parking-slot-section hidden">
+
+
+            <!-- SLOT SECTION HEADER -->
+
+            <div class="slot-section-header">
+
+                <div>
+
+                    <span class="dashboard-label">
+                        PARKING SLOTS
+                    </span>
+
+                    <h2 id="selectedParkingName">
+                        Parking Slots
+                    </h2>
+
+                    <p id="selectedParkingLocation">
+                        Select a vacant slot to continue.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="closeSlotSection"
+                    type="button"
+                    class="close-slot-section">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+            <!-- SLOT LEGEND -->
+
+            <div class="slot-legend">
+
+                <div class="legend-item">
+
+                    <span class="legend-box vacant"></span>
+
+                    <span>
+                        Vacant
+                    </span>
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <span class="legend-box occupied"></span>
+
+                    <span>
+                        Occupied
+                    </span>
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <span class="legend-box reserved"></span>
+
+                    <span>
+                        Reserved
+                    </span>
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <span class="legend-box selected"></span>
+
+                    <span>
+                        Selected
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ENTRY -->
+
+            <div class="parking-entry">
+                🚗 ENTRY
+            </div>
+
+
+            <!-- SLOT GRID -->
+
+            <div
+                id="parkingSlotGrid"
+                class="parking-slot-grid">
+
+                <!-- JavaScript creates slots here -->
+
+            </div>
+
+
+            <!-- SELECTED SLOT -->
+
+            <div class="selected-slot-box">
+
+                <p>
+
+                    Selected Slot:
+
+                    <strong id="selectedSlotName">
+                        None
+                    </strong>
+
+                </p>
+
+
+                <button
+                    id="bookSelectedSlot"
+                    class="book-slot-btn"
+                    type="button"
+                    disabled>
+
+                    Book Selected Slot
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             MY BOOKINGS
+        ====================================================== -->
+
+        <section
+            id="myBookingsSection"
+            class="my-bookings-section">
+
+
+            <div class="my-bookings-header">
+
+                <div>
+
+                    <span class="dashboard-label">
+                        RESERVATIONS
+                    </span>
+
+                    <h2>
+                        My Bookings
+                    </h2>
+
+                </div>
+
+
+                <span id="bookingCount">
+                    0 bookings
+                </span>
+
+            </div>
+
+
+            <!-- BOOKINGS CREATED BY JAVASCRIPT -->
+
+            <div id="myBookingsList">
+
+                <div class="no-bookings">
+
+                    <div class="no-bookings-icon">
+                        🅿️
+                    </div>
+
+                    <p>
+                        You don't have any reserved parking slots.
+                    </p>
+
+                    <small>
+                        Select a parking location and book a vacant slot.
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </section>
+
+
+    <!-- =====================================================
+         PARKING SLOT MODAL
+         
+         Used when user clicks "View Slots".
+    ====================================================== -->
+
+    <div
+        id="slotModal"
+        class="slot-modal hidden">
+
+
+        <div class="slot-modal-content">
+
+
+            <!-- CLOSE -->
+
+            <button
+                id="slotModalClose"
+                class="slot-modal-close"
+                type="button">
+
+                &times;
+
+            </button>
+
+
+            <!-- HEADER -->
+
+            <div class="slot-header">
+
+                <div class="booking-icon">
+                    🅿️
+                </div>
+
+                <div>
+
+                    <span class="dashboard-label">
+                        SELECT PARKING SLOT
+                    </span>
+
+                    <h2 id="slotParkingName">
+                        Parking Slots
+                    </h2>
+
+                    <p id="slotParkingLocation">
+                        📍 Parking Location
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- LEGEND -->
+
+            <div class="slot-legend">
+
+                <div class="legend-item">
+
+                    <span class="legend-box vacant"></span>
+
+                    Vacant
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <span class="legend-box occupied"></span>
+
+                    Occupied
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <span class="legend-box reserved"></span>
+
+                    Reserved
+
+                </div>
+
+
+                <div class="legend-item">
+
+                    <span class="legend-box selected"></span>
+
+                    Selected
+
+                </div>
+
+            </div>
+
+
+            <!-- ENTRY -->
+
+            <div class="parking-entry">
+                🚗 ENTRY
+            </div>
+
+
+            <!-- SLOT GRID -->
+
+            <div
+                id="modalSlotGrid"
+                class="parking-slot-grid">
+
+                <!-- JavaScript creates slots here -->
+
+            </div>
+
+
+            <!-- SELECTED SLOT -->
+
+            <div class="selected-slot-box">
+
+                <p>
+
+                    Selected Slot:
+
+                    <strong id="modalSelectedSlot">
+                        None
+                    </strong>
+
+                </p>
+
+
+                <button
+                    id="modalBookSlot"
+                    class="book-slot-btn"
+                    type="button"
+                    disabled>
+
+                    Book Selected Slot
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         BOOKING SUCCESS MODAL
+    ====================================================== -->
+
+    <div
+        id="successModal"
+        class="dashboard-modal">
+
+
+        <div class="success-box">
+
+
+            <!-- SUCCESS ICON -->
+
+            <div class="success-check">
+                ✓
+            </div>
+
+
+            <h2>
+                Booking Confirmed!
+            </h2>
+
+
+            <p>
+                Your parking slot has been successfully reserved.
+            </p>
+
+
+            <!-- BOOKING DETAILS -->
+
+            <div class="booking-qr">
+
+                <div>
+                    ▀█▀ █▀█ ▀█▀<br>
+                    █▄█ █▀▄  █<br>
+                    ▀▀▀ ▀▀▀ ▀▀▀
+                </div>
+
+
+                <span>
+
+                    Booking ID:
+
+                    <strong id="bookingId">
+                        PS000000
+                    </strong>
+
+                </span>
+
+            </div>
+
+
+            <!-- DONE -->
+
+            <button
+                id="doneButton"
+                class="confirm-booking"
+                type="button">
+
+                Done
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         LEAFLET JS
+    ====================================================== -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+
+    <!-- =====================================================
+         YOUR JAVASCRIPT
+    ====================================================== -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
