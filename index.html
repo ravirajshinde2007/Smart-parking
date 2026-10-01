@@ -479,7 +479,7 @@
                                 I agree to the
 
                                 <a href="#">
-                                    Terms & Conditions
+                                    Terms &amp; Conditions
                                 </a>
 
                                 and
@@ -575,6 +575,8 @@
 
     <section id="dashboardView"
              class="dashboard-view hidden">
+
+    <div id="dashboardSection">
 
 
         <!-- =================================================
@@ -893,350 +895,99 @@
         </section>
 
 
-        <!-- =====================================================
-             PARKING SLOT SECTION
-             
-             This section can be used to display the selected
-             parking area's slots directly on the dashboard.
-        ====================================================== -->
+        <!-- =================================================
+             MY BOOKINGS
+        ================================================== -->
 
-        <section
-            id="parkingSlotSection"
-            class="parking-slot-section hidden">
+        <section id="myBookingsSection"
+                 class="dashboard-bookings-card">
 
-
-            <!-- SLOT SECTION HEADER -->
-
-            <div class="slot-section-header">
+            <div class="dashboard-card-header">
 
                 <div>
 
                     <span class="dashboard-label">
-                        PARKING SLOTS
+                        MY BOOKINGS
                     </span>
 
-                    <h2 id="selectedParkingName">
-                        Parking Slots
+                    <h2>
+                        Reserved Parking Slots
                     </h2>
 
-                    <p id="selectedParkingLocation">
-                        Select a vacant slot to continue.
-                    </p>
-
                 </div>
 
+                <span id="bookingCount"
+                      class="parking-count">
 
-                <button
-                    id="closeSlotSection"
-                    type="button"
-                    class="close-slot-section">
+                    0 bookings
 
-                    ×
-
-                </button>
+                </span>
 
             </div>
 
-
-            <!-- SLOT LEGEND -->
-
-            <div class="slot-legend">
-
-                <div class="legend-item">
-
-                    <span class="legend-box vacant"></span>
-
-                    <span>
-                        Vacant
-                    </span>
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-box occupied"></span>
-
-                    <span>
-                        Occupied
-                    </span>
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-box reserved"></span>
-
-                    <span>
-                        Reserved
-                    </span>
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-box selected"></span>
-
-                    <span>
-                        Selected
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- ENTRY -->
-
-            <div class="parking-entry">
-                🚗 ENTRY
-            </div>
-
-
-            <!-- SLOT GRID -->
-
-            <div
-                id="parkingSlotGrid"
-                class="parking-slot-grid">
-
-                <!-- JavaScript creates slots here -->
-
-            </div>
-
-
-            <!-- SELECTED SLOT -->
-
-            <div class="selected-slot-box">
-
-                <p>
-
-                    Selected Slot:
-
-                    <strong id="selectedSlotName">
-                        None
-                    </strong>
-
-                </p>
-
-
-                <button
-                    id="bookSelectedSlot"
-                    class="book-slot-btn"
-                    type="button"
-                    disabled>
-
-                    Book Selected Slot
-
-                </button>
+            <div id="myBookingsList"
+                 class="my-bookings-list">
 
             </div>
 
         </section>
 
-
-        <!-- =====================================================
-             MY BOOKINGS
-        ====================================================== -->
-
-        <section
-            id="myBookingsSection"
-            class="my-bookings-section">
+        </div>
+        <!-- /#dashboardSection -->
 
 
-            <div class="my-bookings-header">
+        <!-- =================================================
+             PARKING SLOTS SCREEN
+             Opened by "View Slots". Hides #dashboardSection.
+        ================================================== -->
+
+        <section id="parkingSlotsPage" class="parking-slots-page" hidden>
+
+            <div class="slots-page-header">
 
                 <div>
-
-                    <span class="dashboard-label">
-                        RESERVATIONS
-                    </span>
-
-                    <h2>
-                        My Bookings
-                    </h2>
-
+                    <h2 id="slotParkingName">Parking Slots</h2>
+                    <p id="slotParkingLocation">📍 Parking Location</p>
                 </div>
 
-
-                <span id="bookingCount">
-                    0 bookings
-                </span>
+                <button id="backToDashboard"
+                        class="back-dashboard-btn"
+                        type="button"
+                        aria-label="Back to dashboard">
+                    ← Back
+                </button>
 
             </div>
 
+            <div class="slots-availability">
+                <span id="slotAvailabilityText">Select a vacant slot</span>
+            </div>
 
-            <!-- BOOKINGS CREATED BY JAVASCRIPT -->
+            <div class="slot-legend">
+                <span><i class="legend-box vacant"></i> Vacant</span>
+                <span><i class="legend-box occupied"></i> Occupied</span>
+                <span><i class="legend-box reserved"></i> Reserved</span>
+                <span><i class="legend-box selected"></i> Selected</span>
+            </div>
 
-            <div id="myBookingsList">
+            <div class="parking-entry">🚗 ENTRY</div>
 
-                <div class="no-bookings">
+            <div id="parkingSlotGrid" class="parking-slot-grid"></div>
 
-                    <div class="no-bookings-icon">
-                        🅿️
-                    </div>
-
-                    <p>
-                        You don't have any reserved parking slots.
-                    </p>
-
-                    <small>
-                        Select a parking location and book a vacant slot.
-                    </small>
-
-                </div>
-
+            <div class="selected-slot-box">
+                <p>Selected Slot: <strong id="selectedSlotName">None</strong></p>
+                <button id="bookSelectedSlot"
+                        class="book-slot-btn"
+                        type="button"
+                        disabled>
+                    Book Selected Slot
+                </button>
             </div>
 
         </section>
 
     </section>
-
-
-    <!-- =====================================================
-         PARKING SLOT MODAL
-         
-         Used when user clicks "View Slots".
-    ====================================================== -->
-
-    <div
-        id="slotModal"
-        class="slot-modal hidden">
-
-
-        <div class="slot-modal-content">
-
-
-            <!-- CLOSE -->
-
-            <button
-                id="slotModalClose"
-                class="slot-modal-close"
-                type="button">
-
-                &times;
-
-            </button>
-
-
-            <!-- HEADER -->
-
-            <div class="slot-header">
-
-                <div class="booking-icon">
-                    🅿️
-                </div>
-
-                <div>
-
-                    <span class="dashboard-label">
-                        SELECT PARKING SLOT
-                    </span>
-
-                    <h2 id="slotParkingName">
-                        Parking Slots
-                    </h2>
-
-                    <p id="slotParkingLocation">
-                        📍 Parking Location
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <!-- LEGEND -->
-
-            <div class="slot-legend">
-
-                <div class="legend-item">
-
-                    <span class="legend-box vacant"></span>
-
-                    Vacant
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-box occupied"></span>
-
-                    Occupied
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-box reserved"></span>
-
-                    Reserved
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span class="legend-box selected"></span>
-
-                    Selected
-
-                </div>
-
-            </div>
-
-
-            <!-- ENTRY -->
-
-            <div class="parking-entry">
-                🚗 ENTRY
-            </div>
-
-
-            <!-- SLOT GRID -->
-
-            <div
-                id="modalSlotGrid"
-                class="parking-slot-grid">
-
-                <!-- JavaScript creates slots here -->
-
-            </div>
-
-
-            <!-- SELECTED SLOT -->
-
-            <div class="selected-slot-box">
-
-                <p>
-
-                    Selected Slot:
-
-                    <strong id="modalSelectedSlot">
-                        None
-                    </strong>
-
-                </p>
-
-
-                <button
-                    id="modalBookSlot"
-                    class="book-slot-btn"
-                    type="button"
-                    disabled>
-
-                    Book Selected Slot
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
+    <!-- /#dashboardView -->
 
 
     <!-- =====================================================

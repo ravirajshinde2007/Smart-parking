@@ -524,27 +524,27 @@ const parkingData = [
 
     {
         id: 1,
-        name: "City Center Parking",
+        name: "City Center Mall Parking",
         state: "Maharashtra",
         city: "Nashik",
-        area: "College Road",
-        locality: "College Road",
-        lat: 20.0059,
-        lng: 73.7620,
+        area: "Gangapur Road",
+        locality: "Gangapur Road",
+        lat:19.99048,
+        lng:73.76162,
         available: 24,
         capacity: 50,
-        rate: 40
+        rate: 20
     },
 
     {
         id: 2,
-        name: "Nashik Road Parking",
+        name: "Phoenix Marketcity Parking",
         state: "Maharashtra",
-        city: "Nashik",
-        area: "Nashik Road",
-        locality: "Nashik Road",
-        lat: 19.9975,
-        lng: 73.7898,
+        city: "Pune",
+        area: "Viman Nagar",
+        locality: "Viman Nagar",
+        lat: 18.5621, 
+        lng: 73.9167,
         available: 8,
         capacity: 40,
         rate: 30
@@ -552,13 +552,13 @@ const parkingData = [
 
     {
         id: 3,
-        name: "CBS Smart Parking",
-        state: "Maharashtra",
-        city: "Nashik",
-        area: "CBS",
-        locality: "CBS",
-        lat: 20.0055,
-        lng: 73.7830,
+        name: "Palladium Mall Parking",
+        state: "Gujarat",
+        city: "Ahmedabad",
+        area: "Sabarmati",
+        locality: "Sarkhej-Gandhinagar Highway",
+        lat:23.058328, 
+        lng: 72.520689,
         available: 4,
         capacity: 35,
         rate: 35
@@ -566,13 +566,13 @@ const parkingData = [
 
     {
         id: 4,
-        name: "FC Road Parking",
-        state: "Maharashtra",
-        city: "Pune",
-        area: "FC Road",
-        locality: "FC Road",
-        lat: 18.5236,
-        lng: 73.8412,
+        name: "VR Mall Parking",
+        state: "Gujarat",
+        city: "Surat",
+        area: "Dumas Road",
+        locality: "Magdalla Road",
+        lat: 21.1440,
+        lng: 72.7455,
         available: 5,
         capacity: 60,
         rate: 60
@@ -634,33 +634,33 @@ const parkingData = [
         rate: 50
     },
 
-    {
-        id: 9,
-        name: "Surat Central Parking",
-        state: "Gujarat",
-        city: "Surat",
-        area: "Adajan",
-        locality: "Adajan",
-        lat: 21.1959,
-        lng: 72.7933,
-        available: 17,
-        capacity: 60,
-        rate: 40
-    },
+    // {
+    //     id: 9,
+    //     name: "Surat Central Parking",
+    //     state: "Gujarat",
+    //     city: "Surat",
+    //     area: "Adajan",
+    //     locality: "Adajan",
+    //     lat: 21.1959,
+    //     lng: 72.7933,
+    //     available: 17,
+    //     capacity: 60,
+    //     rate: 40
+    // },
 
-    {
-        id: 10,
-        name: "Indore Central Parking",
-        state: "Madhya Pradesh",
-        city: "Indore",
-        area: "Vijay Nagar",
-        locality: "Vijay Nagar",
-        lat: 22.7533,
-        lng: 75.8937,
-        available: 22,
-        capacity: 70,
-        rate: 35
-    },
+    // {
+    //     id: 10,
+    //     name: "Indore Central Parking",
+    //     state: "Madhya Pradesh",
+    //     city: "Indore",
+    //     area: "Vijay Nagar",
+    //     locality: "Vijay Nagar",
+    //     lat: 22.7533,
+    //     lng: 75.8937,
+    //     available: 22,
+    //     capacity: 70,
+    //     rate: 35
+    // },
 
     {
         id: 11,
@@ -691,6 +691,128 @@ const parkingData = [
     }
 
 ];
+/* =====================================
+   PARKING SLOTS SCREEN
+===================================== */
+
+let selectedParkingForSlots = null;
+let selectedParkingSlot = null;
+let parkingSlots = {};
+
+// Slots for a parking location.
+// Uses the same generator as the dashboard so both always agree.
+function getParkingSlots(parking) {
+    return createParkingSlots(parking);
+}
+
+// Display all slots.
+function renderParkingSlots() {
+    const grid = document.getElementById("parkingSlotGrid");
+    const availabilityText = document.getElementById("slotAvailabilityText");
+
+    if (!grid || !selectedParkingForSlots) return;
+
+    grid.innerHTML = "";
+
+    const slots = getParkingSlots(selectedParkingForSlots);
+    const vacantCount = slots.filter(
+        slot => slot.status === "vacant"
+    ).length;
+
+    availabilityText.textContent =
+        `${vacantCount} vacant out of ${slots.length} slots`;
+
+    slots.forEach(slot => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.textContent = slot.id;
+        button.className = `parking-slot ${slot.status}`;
+
+        if (selectedParkingSlot &&
+            selectedParkingSlot.id === slot.id) {
+            button.className = "parking-slot selected";
+        }
+
+        button.disabled = slot.status !== "vacant";
+
+        button.title = slot.status === "vacant"
+            ? "Click to select this slot"
+            : slot.status.charAt(0).toUpperCase() + slot.status.slice(1);
+
+        button.addEventListener("click", () => {
+            selectedParkingSlot = slot;
+            renderParkingSlots();
+            updateSelectedSlotDisplay();
+        });
+
+        grid.appendChild(button);
+    });
+}
+
+// Update selected slot and booking button.
+function updateSelectedSlotDisplay() {
+    const selectedName = document.getElementById("selectedSlotName");
+    const bookButton = document.getElementById("bookSelectedSlot");
+
+    selectedName.textContent = selectedParkingSlot
+        ? selectedSlotParkingName()
+        : "None";
+
+    bookButton.disabled = !selectedParkingSlot;
+}
+
+function selectedSlotParkingName() {
+    return selectedParkingSlot ? selectedParkingSlot.id : "None";
+}
+
+// Show the dashboard again (and fix the Leaflet map size,
+// because it was hidden while the slots screen was open).
+function showDashboardSection() {
+
+    const dashboardSection =
+        document.getElementById("dashboardSection");
+
+    const parkingSlotsPage =
+        document.getElementById("parkingSlotsPage");
+
+    if (parkingSlotsPage) {
+        parkingSlotsPage.hidden = true;
+    }
+
+    if (dashboardSection) {
+        dashboardSection.hidden = false;
+    }
+
+    if (parkingMap) {
+        setTimeout(function () {
+            parkingMap.invalidateSize();
+        }, 0);
+    }
+
+}
+
+// Back to dashboard.
+const backToDashboardButton =
+    document.getElementById("backToDashboard");
+
+if (backToDashboardButton) {
+
+    backToDashboardButton.addEventListener("click", () => {
+
+        showDashboardSection();
+
+        selectedParkingForSlots = null;
+        selectedParkingSlot = null;
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+    });
+
+}
+
+// NOTE: "Book Selected Slot" is handled once, further below,
+// by bookSelectedParkingSlot().
 
 
 /* =========================================================
@@ -722,8 +844,6 @@ let selectedParking = null;
        { id: "A3", status: "reserved" }
    ];
 */
-
-let parkingSlots = {};
 
 let selectedSlot = null;
 
@@ -913,6 +1033,21 @@ function createParkingSlots(parking) {
                     );
 
                 if (slot) {
+
+                    /*
+                       A saved booking took a vacant slot,
+                       so the available count must go down too.
+                       (parkingData resets on every page load.)
+                    */
+
+                    if (
+                        slot.status === "vacant" &&
+                        parking.available > 0
+                    ) {
+
+                        parking.available--;
+
+                    }
 
                     slot.status =
                         "reserved";
@@ -1284,12 +1419,11 @@ function updateDashboardMap(data) {
                     <br><br>
 
                     <button
-                        type="button"
-                        onclick="openParkingSlots(${parking.id})">
-
-                        View Slots
-
-                    </button>
+                            class="view-slots-btn"
+                            onclick="openParkingSlots('${parking.id}')"
+                            type="button">
+                            View Slots
+</button>
 
                 </div>
 
@@ -1329,6 +1463,28 @@ const searchResults =
     document.getElementById(
         "searchResults"
     );
+
+/*
+   .location-search-results is display:none until it has ".show".
+   Show it whenever it contains a message, hide it when empty.
+*/
+
+if (searchResults) {
+
+    new MutationObserver(function () {
+
+        searchResults.classList.toggle(
+            "show",
+            searchResults.textContent.trim() !== ""
+        );
+
+    }).observe(searchResults, {
+        childList: true,
+        characterData: true,
+        subtree: true
+    });
+
+}
 
 
 /* =========================================================
@@ -1939,105 +2095,89 @@ if (currentLocationBtn) {
 
 function openParkingSlots(parkingId) {
 
-    const parking =
-        parkingData.find(
-            item =>
-                Number(item.id) ===
-                Number(parkingId)
-        );
-
+    const parking = parkingData.find(
+        item => Number(item.id) === Number(parkingId)
+    );
 
     if (!parking) {
-
-        showToast(
-            "Parking location not found."
-        );
-
+        showToast("Parking location not found.");
         return;
-
     }
 
+    // Set the selected parking location
+    selectedParkingForSlots = parking;
+    selectedParkingSlot = null;
 
-    selectedParking =
-        parking;
+    // Show the separate slots page
+    const dashboardSection =
+        document.getElementById("dashboardSection");
 
-    selectedSlot =
-        null;
+    const parkingSlotsPage =
+        document.getElementById("parkingSlotsPage");
 
-    selectedSlotParking =
-        parking;
-
-
-    /*
-       Create slots.
-    */
-
-    const slots =
-        createParkingSlots(
-            parking
-        );
-
-
-    /*
-       UPDATE SLOT SECTION
-    */
-
-    const selectedParkingName =
-        document.getElementById(
-            "selectedParkingName"
-        );
-
-    const selectedParkingLocation =
-        document.getElementById(
-            "selectedParkingLocation"
-        );
-
-
-    if (selectedParkingName) {
-
-        selectedParkingName.textContent =
-            parking.name;
-
+    if (dashboardSection) {
+        dashboardSection.hidden = true;
     }
 
+    if (parkingSlotsPage) {
+        parkingSlotsPage.hidden = false;
+    }
 
-    if (selectedParkingLocation) {
+    // Display parking details
+    const slotParkingName =
+        document.getElementById("slotParkingName");
 
-        selectedParkingLocation.textContent =
+    const slotParkingLocation =
+        document.getElementById("slotParkingLocation");
+
+    if (slotParkingName) {
+        slotParkingName.textContent = parking.name;
+    }
+
+    if (slotParkingLocation) {
+        slotParkingLocation.textContent =
             `📍 ${parking.area}, ${parking.city}`;
-
     }
 
+    // Display the slots
+    renderParkingSlots();
+    updateSelectedSlotDisplay();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
 
     /*
        DISPLAY INLINE SLOT SECTION
     */
 
-    const parkingSlotSection =
-        document.getElementById(
-            "parkingSlotSection"
-        );
+    // const parkingSlotSection =
+    //     document.getElementById(
+    //         "parkingSlotSection"
+    //     );
 
 
-    if (parkingSlotSection) {
+    // if (parkingSlotSection) {
 
-        parkingSlotSection.classList.remove(
-            "hidden"
-        );
+    //     parkingSlotSection.classList.remove(
+    //         "hidden"
+    //     );
 
-        parkingSlotSection.style.display =
-            "block";
+    //     parkingSlotSection.style.display =
+    //         "block";
 
-    }
+    // }
 
 
     /*
        DISPLAY SLOTS IN INLINE SECTION
     */
 
-    displayParkingSlots(
-        parking
-    );
+    // displayParkingSlots(
+    //     parking
+    // );
 
 
     /*
@@ -2046,83 +2186,83 @@ function openParkingSlots(parkingId) {
        slot-selection popup.
     */
 
-    const slotModal =
-        document.getElementById(
-            "slotModal"
-        );
+    // const slotModal =
+    //     document.getElementById(
+    //         "slotModal"
+    //     );
 
 
-    if (slotModal) {
+    // if (slotModalElement) {
 
-        slotModal.classList.remove(
-            "hidden"
-        );
+    //     slotModal.classList.remove(
+    //         "hidden"
+    //     );
 
-        slotModal.classList.add(
-            "show"
-        );
+    //     slotModal.classList.add(
+    //         "show"
+    //     );
 
-        slotModal.style.display =
-            "flex";
+    //     slotModalElement.style.display =
+    //         "flex";
 
-    }
-
-
-    const slotParkingName =
-        document.getElementById(
-            "slotParkingName"
-        );
-
-    const slotParkingLocation =
-        document.getElementById(
-            "slotParkingLocation"
-        );
+    // }
 
 
-    if (slotParkingName) {
+    // const slotParkingName =
+    //     document.getElementById(
+    //         "slotParkingName"
+    //     );
 
-        slotParkingName.textContent =
-            parking.name;
+    // const slotParkingLocation =
+    //     document.getElementById(
+    //         "slotParkingLocation"
+    //     );
 
-    }
+
+    // if (slotParkingName) {
+
+    //     slotParkingName.textContent =
+    //         parking.name;
+
+    // }
 
 
-    if (slotParkingLocation) {
+    // if (slotParkingLocation) {
 
-        slotParkingLocation.textContent =
-            `📍 ${parking.area}, ${parking.city}`;
+    //     slotParkingLocation.textContent =
+    //         `📍 ${parking.area}, ${parking.city}`;
 
-    }
+    // }
 
 
     /*
        Display slots inside modal.
     */
 
-    displayModalParkingSlots(
-        parking,
-        slots
-    );
+    // displayModalParkingSlots(
+    //     parking,
+    //     slots
+    // );
 
 
     /*
        Scroll to slot section.
     */
 
-    setTimeout(function () {
+//     setTimeout(function () {
 
-        if (parkingSlotSection) {
+//         if (parkingSlotSection) {
 
-            parkingSlotSection.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+//             parkingSlotSection.scrollIntoView({
+//                 behavior: "smooth",
+//                 block: "start"
+//             });
 
-        }
+//         }
 
-    }, 100);
+//     }, 100);
 
-}
+// }
 
 
 /* =========================================================
@@ -2538,8 +2678,8 @@ function updateSelectedSlotUI() {
 function bookSelectedParkingSlot() {
 
     if (
-        !selectedSlot ||
-        !selectedSlotParking
+        !selectedParkingSlot ||
+        !selectedParkingForSlots
     ) {
 
         showToast(
@@ -2552,7 +2692,7 @@ function bookSelectedParkingSlot() {
 
 
     const parking =
-        selectedSlotParking;
+        selectedParkingForSlots;
 
 
     const slots =
@@ -2565,7 +2705,7 @@ function bookSelectedParkingSlot() {
         slots.find(
             item =>
                 item.id ===
-                selectedSlot.id
+                selectedParkingSlot.id
         );
 
 
@@ -2589,6 +2729,13 @@ function bookSelectedParkingSlot() {
         showToast(
             "This slot is no longer available."
         );
+
+        selectedParkingSlot =
+            null;
+
+        renderParkingSlots();
+
+        updateSelectedSlotDisplay();
 
         return;
 
@@ -2647,7 +2794,7 @@ function bookSelectedParkingSlot() {
             parking.city,
 
         slotId:
-            selectedSlot.id,
+            slot.id,
 
         status:
             "Reserved",
@@ -2674,6 +2821,21 @@ function bookSelectedParkingSlot() {
     saveBookings(
         bookings
     );
+
+
+    /*
+       Go back to the dashboard.
+    */
+
+    selectedParkingSlot =
+        null;
+
+    selectedParkingForSlots =
+        null;
+
+    updateSelectedSlotDisplay();
+
+    showDashboardSection();
 
 
     /*
@@ -2711,31 +2873,6 @@ function bookSelectedParkingSlot() {
 
 
     /*
-       Close slot modal.
-    */
-
-    closeSlotModal();
-
-
-    /*
-       Clear selected slot.
-    */
-
-    selectedSlot =
-        null;
-
-
-    selectedSlotParking =
-        null;
-
-
-    updateSelectedSlotUI();
-
-
-    refreshSlotDisplays();
-
-
-    /*
        Show success modal.
     */
 
@@ -2752,6 +2889,12 @@ function bookSelectedParkingSlot() {
         );
 
     }
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 
 
     showToast(
@@ -2911,35 +3054,35 @@ if (slotModalClose) {
    CLOSE SLOT SECTION
 ========================================================= */
 
-const closeSlotSection =
-    document.getElementById(
-        "closeSlotSection"
-    );
+// const closeSlotSection =
+//     document.getElementById(
+//         "closeSlotSection"
+//     );
 
 
-if (closeSlotSection) {
+// if (closeSlotSection) {
 
-    closeSlotSection.addEventListener(
-        "click",
-        function () {
+//     closeSlotSection.addEventListener(
+//         "click",
+//         function () {
 
-            const section =
-                document.getElementById(
-                    "parkingSlotSection"
-                );
+//             const section =
+//                 document.getElementById(
+//                     "parkingSlotSection"
+//                 );
 
-            if (section) {
+//             if (section) {
 
-                section.classList.add(
-                    "hidden"
-                );
+//                 section.classList.add(
+//                     "hidden"
+//                 );
 
-            }
+//             }
 
-        }
-    );
+//         }
+//     );
 
-}
+// }
 
 
 /* =========================================================
