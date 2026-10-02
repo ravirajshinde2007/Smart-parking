@@ -3676,3 +3676,644 @@ document.addEventListener(
 
     }
 );
+
+
+/* =========================================================
+   SIDEBAR: PAGES, RESERVATIONS, PAYMENTS, ENTRY & EXIT
+========================================================= */
+
+const PAGES = ["dashboard", "reservations", "payments", "logs"];
+
+function escHtml(text) {
+    const d = document.createElement("div");
+    d.textContent = text == null ? "" : text;
+    return d.innerHTML;
+}
+
+function showPage(name) {
+
+    PAGES.forEach(p => {
+        const el = document.getElementById(
+            p === "dashboard" ? "dashboardSection" : "page-" + p
+        );
+        if (el) el.hidden = p !== name;
+    });
+
+    const slotsPage = document.getElementById("parkingSlotsPage");
+    if (slotsPage) slotsPage.hidden = true;
+
+    document.querySelectorAll(".sidebar-link[data-page]").forEach(b =>
+        b.classList.toggle("active", b.dataset.page === name)
+    );
+
+    if (name === "dashboard" && parkingMap) {
+        setTimeout(() => parkingMap.invalidateSize(), 0);
+    }
+
+    refreshSidebarPages();
+    window.scrollTo({ top: 0 });
+}
+
+document.querySelectorAll(".sidebar-link[data-page]").forEach(b =>
+    b.addEventListener("click", () => showPage(b.dataset.page))
+);
+
+const sidebarLogout = document.getElementById("sidebarLogout");
+if (sidebarLogout) {
+    sidebarLogout.addEventListener("click", () =>
+        document.getElementById("logoutButton").click()
+    );
+}
+
+/* Always open on the Dashboard page after login. */
+const originalShowDashboard = showDashboard;
+showDashboard = function () {
+    originalShowDashboard();
+    showPage("dashboard");
+};
+
+/* After booking, "Done" takes the user to Reservations. */
+if (doneButton) doneButton.addEventListener("click", () => showPage("reservations"));
+
+
+/* ---------- Photo storage (IndexedDB, not localStorage) ---------- */
+
+const photoDB = new Promise((resolve, reject) => {
+    const req = indexedDB.open("parkSmartPhotos", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("photos");
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+});
+
+async function savePhoto(id, dataUrl) {
+    const db = await photoDB;
+    return new Promise((res, rej) => {
+        const tx = db.transaction("photos", "readwrite");
+        tx.objectStore("photos").put(dataUrl, id);
+        tx.oncomplete = res;
+        tx.onerror = () => rej(tx.error);
+    });
+}
+
+async function getPhoto(id) {
+    const db = await photoDB;
+    return new Promise(res => {
+        const req = db.transaction("photos").objectStore("photos").get(id);
+        req.onsuccess = () => res(req.result || "");
+        req.onerror = () => res("");
+    });
+}
+
+/* Opens the camera (phones) or file picker (desktop); returns a resized JPEG. */
+function pickPhoto() {
+    return new Promise(resolve => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.capture = "environment";
+        input.addEventListener("cancel", () => resolve(null));
+        input.addEventListener("change", () => {
+            const file = input.files[0];
+            if (!file) return resolve(null);
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 800 / img.width);
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL("image/jpeg", 0.7));
+            };
+            img.onerror = () => resolve(null);
+            img.src = URL.createObjectURL(file);
+        });
+        input.click();
+    });
+}
+
+
+/* ---------- Booking helpers ---------- */
+
+function updateBooking(id, changes) {
+    const bookings = getBookings();
+    const booking = bookings.find(b => b.id === id);
+    if (!booking) return null;
+    Object.assign(booking, changes);
+    saveBookings(bookings);
+    return booking;
+}
+
+function rateFor(booking) {
+    const p = parkingData.find(x => Number(x.id) === Number(booking.parkingId));
+    return p ? Number(p.rate) : 0;
+}
+
+const fmtTime = t => (t ? new Date(t).toLocaleString() : "—");
+
+
+/* ---------- Reservations: status + cancel only while "Reserved" ---------- */
+
+function decorateReservations() {
+    const bookings = getBookings();
+    document.querySelectorAll("#myBookingsList .booking-card").forEach((card, i) => {
+        const b = bookings[i];
+        if (!b) return;
+        const label = b.status === "Completed" ? "🟢 Completed"
+            : b.status === "Parked" ? "🔵 Parked" : "🟡 Reserved";
+        const statusEl = card.querySelector(".booking-status");
+        if (statusEl) statusEl.textContent = label;
+        if (b.status === "Parked" || b.status === "Completed") {
+            const cancel = card.querySelector(".cancel-booking-btn");
+            if (cancel) cancel.remove();
+        }
+    });
+}
+
+
+/* ---------- Entry & Exit ---------- */
+
+async function recordEntry(id) {
+    const plate = (prompt("Vehicle plate number at entry:") || "").trim().toUpperCase();
+    if (!plate) return showToast("Plate number is required.");
+
+    const photo = await pickPhoto();
+    if (!photo) return showToast("Entry photo is required.");
+
+    const photoId = "entry-" + id;
+    await savePhoto(photoId, photo);
+    updateBooking(id, { status: "Parked", entry: { time: Date.now(), plate, photoId } });
+    const bk = getBookings().find(b => b.id === id);
+    addNotification(`🚗 Entry confirmed: ${plate} parked at ${bk.parkingName}, slot ${bk.slotId}, ${fmtTime(Date.now())}.`);
+    refreshSidebarPages();
+}
+
+async function recordExit(id) {
+    const booking = getBookings().find(b => b.id === id);
+    if (!booking || !booking.entry) return;
+
+    const plate = (prompt("Vehicle plate number at exit:") || "").trim().toUpperCase();
+    if (!plate) return showToast("Plate number is required.");
+
+    const photo = await pickPhoto();
+    if (!photo) return showToast("Exit photo is required.");
+
+    const match = plate === booking.entry.plate;
+    if (!match && !confirm("Plate does not match the entry plate. Continue anyway?")) return;
+
+    const photoId = "exit-" + id;
+    await savePhoto(photoId, photo);
+
+    const exitTime = Date.now();
+    const hours = Math.max(1, Math.ceil((exitTime - booking.entry.time) / 3600000));
+    const prepaid = booking.payment ? booking.payment.amount : 0;
+    const extraAmt = Math.max(0, hours * rateFor(booking) - prepaid);
+
+    updateBooking(id, {
+        status: "Completed",
+        exit: { time: exitTime, plate, photoId, match },
+        extra: extraAmt > 0
+            ? { hours, amount: extraAmt, status: "Pending", method: "", txnId: "", paidAt: null }
+            : null
+    });
+    addNotification(`🏁 Exit completed (${hours} hr). ` +
+        (extraAmt > 0 ? `Extra ₹${extraAmt} is due in Payments.` : "No extra payment due. Thank you!") +
+        (match ? "" : " ⚠ Plate mismatch was flagged."));
+    refreshSidebarPages();
+}
+
+function renderLogs() {
+    const list = document.getElementById("logsList");
+    if (!list) return;
+
+    const bookings = getBookings().filter(b => b.status !== "Cancelled");
+    if (bookings.length === 0) {
+        list.innerHTML = '<div class="no-bookings"><p>No reservations yet.</p></div>';
+        return;
+    }
+
+    list.innerHTML = bookings.map(b => {
+        const box = (title, data, prefix) => `
+            <div class="log-box">
+                ${data ? `<img alt="${title} photo" data-photo="${data.photoId}">`
+                       : '<div class="log-photo-empty">📷</div>'}
+                <strong>${title}</strong>
+                ${data ? `${fmtTime(data.time)}<br>Plate: ${escHtml(data.plate)}
+                          ${prefix === "exit" && data.match === false ? '<br><span class="log-warn">⚠ Plate mismatch</span>' : ""}`
+                       : "Not recorded"}
+            </div>`;
+
+        const action = b.status === "Reserved"
+            ? `<button type="button" onclick="recordEntry('${b.id}')">📷 Record Entry</button>`
+            : b.status === "Parked"
+                ? `<button type="button" onclick="requestExitOtp('${b.id}')">🔐 Exit with OTP</button>`
+                : "";
+
+        return `
+            <div class="booking-card">
+                <div class="booking-card-header">
+                    <div>
+                        <strong>${escHtml(b.parkingName)}</strong>
+                        <small>Slot ${escHtml(b.slotId)} · ${escHtml(b.id)}</small>
+                    </div>
+                    <span class="booking-status">${escHtml(b.status)}</span>
+                </div>
+                <div class="log-grid">${box("Entry", b.entry, "entry")}${box("Exit", b.exit, "exit")}</div>
+                <div class="log-actions">${action}</div>
+            </div>`;
+    }).join("");
+
+    list.querySelectorAll("img[data-photo]").forEach(img =>
+        getPhoto(img.dataset.photo).then(src => { if (src) img.src = src; })
+    );
+}
+
+
+/* ---------- Payments ---------- */
+
+function payBooking(id, kind) {
+    const b = getBookings().find(x => x.id === id);
+    if (!b || !b[kind]) return;
+    openPaymentModal(b[kind].amount, "Payment for " + b.parkingName, info => {
+        updateBooking(id, { [kind]: Object.assign(b[kind], { status: "Paid" }, info) });
+        addNotification(`✅ Payment of ₹${b[kind].amount} received for ${b.id}.`);
+        refreshSidebarPages();
+    });
+}
+
+function showReceipt(id, kind) {
+    const b = getBookings().find(x => x.id === id);
+    if (!b || !b[kind]) return;
+    const p = b[kind];
+    alert(`RECEIPT (DEMO)\n${b.parkingName}\nSlot: ${b.slotId}\nBooking: ${b.id}\n` +
+        `Type: ${kind === "payment" ? "Reservation fee" : "Extra time"}\nAmount: ₹${p.amount}\n` +
+        `Method: ${p.method}\nTxn: ${p.txnId}\nPaid: ${fmtTime(p.paidAt)}`);
+}
+
+function renderPayments() {
+    const body = document.getElementById("paymentsBody");
+    if (!body) return;
+
+    const rows = [];
+    getBookings().forEach(b => {
+        if (b.payment) rows.push({ b, p: b.payment, kind: "payment", label: "Reservation" });
+        if (b.extra) rows.push({ b, p: b.extra, kind: "extra", label: "Extra time" });
+    });
+
+    const total = rows.filter(r => r.p.status === "Paid").reduce((t, r) => t + r.p.amount, 0);
+    const totalEl = document.getElementById("totalPaid");
+    if (totalEl) totalEl.textContent = `Total paid: ₹${total}`;
+
+    body.innerHTML = rows.length === 0
+        ? '<tr><td colspan="7">No payments yet. Book a slot to make your first payment.</td></tr>'
+        : rows.map(({ b, p, kind, label }) => {
+            const paid = p.status === "Paid";
+            return `<tr>
+                <td>${escHtml(b.id)}</td><td>${escHtml(b.parkingName)}</td>
+                <td>${p.hours} hr · ${label}</td><td>₹${p.amount}</td>
+                <td>${escHtml(p.method) || "—"}</td>
+                <td class="${paid ? "pay-paid" : "pay-pending"}">${p.status}</td>
+                <td>${paid
+                    ? `<button type="button" onclick="showReceipt('${b.id}','${kind}')">Receipt</button>`
+                    : `<button type="button" onclick="payBooking('${b.id}','${kind}')">Pay now</button>`}</td>
+            </tr>`;
+        }).join("");
+}
+
+function refreshSidebarPages() {
+    decorateReservations();
+    renderPayments();
+    renderLogs();
+}
+
+/* Keep the new pages in sync whenever bookings are redrawn. */
+const originalDisplayMyBookings = displayMyBookings;
+displayMyBookings = function () {
+    originalDisplayMyBookings();
+    refreshSidebarPages();
+};
+
+
+
+/* =========================================================
+   NOTIFICATIONS (in-app + browser, works offline)
+========================================================= */
+
+const NOTIF_KEY = "parkSmartNotifs";
+const bell = document.querySelector(".dashboard-notification");
+let notifPanel = null;
+
+function getNotifs() {
+    try { return JSON.parse(localStorage.getItem(NOTIF_KEY)) || []; } catch (e) { return []; }
+}
+
+function askNotifPermission() {
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+}
+
+function addNotification(msg) {
+    const list = getNotifs();
+    list.unshift({ msg, time: Date.now(), read: false });
+    localStorage.setItem(NOTIF_KEY, JSON.stringify(list.slice(0, 30)));
+    showToast(msg);
+    renderNotifs();
+    if ("Notification" in window && Notification.permission === "granted") {
+        try { new Notification("ParkSmart", { body: msg }); } catch (e) { /* ignore */ }
+    }
+}
+
+function renderNotifs() {
+    const list = getNotifs();
+    const dot = bell && bell.querySelector("span");
+    if (dot) dot.style.display = list.some(n => !n.read) ? "block" : "none";
+    if (!notifPanel) return;
+    notifPanel.innerHTML =
+        '<div class="notif-head"><strong>Notifications</strong><button type="button" id="notifClear">Clear</button></div>' +
+        (list.length
+            ? list.map(n => `<div class="notif-item${n.read ? "" : " unread"}">${escHtml(n.msg)}<small>${fmtTime(n.time)}</small></div>`).join("")
+            : '<div class="notif-item">No notifications yet</div>');
+    document.getElementById("notifClear").onclick = () => { localStorage.removeItem(NOTIF_KEY); renderNotifs(); };
+}
+
+if (bell) {
+    notifPanel = document.createElement("div");
+    notifPanel.className = "notif-panel";
+    bell.parentElement.appendChild(notifPanel);
+    bell.addEventListener("click", e => {
+        e.stopPropagation();
+        askNotifPermission();
+        renderNotifs();
+        notifPanel.classList.toggle("show");
+        localStorage.setItem(NOTIF_KEY, JSON.stringify(getNotifs().map(n => ({ ...n, read: true }))));
+        const dot = bell.querySelector("span");
+        if (dot) dot.style.display = "none";
+    });
+    notifPanel.addEventListener("click", e => e.stopPropagation());
+    document.addEventListener("click", () => notifPanel.classList.remove("show"));
+    renderNotifs();
+}
+
+
+/* =========================================================
+   GENERIC MODAL + DEMO PAYMENT
+========================================================= */
+
+let otpTimer = null;
+
+function openModal(html) {
+    const modal = document.getElementById("demoModal");
+    modal.querySelector(".success-box").innerHTML = html;
+    modal.classList.add("show");
+    return modal;
+}
+
+function closeModal() {
+    clearInterval(otpTimer);
+    document.getElementById("demoModal").classList.remove("show");
+}
+
+const PAY_FIELDS = {
+    upi: '<input class="pay-input" id="pf1" placeholder="yourname@bank">',
+    card: '<input class="pay-input" id="pf1" placeholder="Card number" maxlength="19">' +
+          '<div class="pay-row"><input class="pay-input" id="pf2" placeholder="MM/YY" maxlength="5">' +
+          '<input class="pay-input" id="pf3" placeholder="CVV" maxlength="3"></div>',
+    wallet: '<p class="pay-demo-note">ParkWallet (demo balance ₹5000) will be used.</p>'
+};
+
+const PAY_DEMO = {
+    upi: ["demo@parksmart"],
+    card: ["4242 4242 4242 4242", "12/30", "123"],
+    wallet: []
+};
+
+function openPaymentModal(amount, title, onSuccess) {
+
+    let method = "upi";
+
+    openModal(`
+        <h2>Demo Payment</h2>
+        <p>${escHtml(title)}<br><strong>Amount: ₹${amount}</strong></p>
+        <div class="pay-tabs">
+            <button type="button" data-m="upi" class="active">UPI</button>
+            <button type="button" data-m="card">Card</button>
+            <button type="button" data-m="wallet">Wallet</button>
+        </div>
+        <div id="payFields">${PAY_FIELDS.upi}</div>
+        <p class="pay-demo-note">🧪 Demo only. No real money is charged.<br>
+        Test card 4242… succeeds, 4000 0000 0000 0002 is declined.</p>
+        <p id="payMsg" class="log-warn"></p>
+        <button type="button" id="payFill" class="pay-ghost">Fill demo details</button>
+        <button type="button" id="payNow" class="confirm-booking">Pay ₹${amount}</button>
+        <button type="button" id="payCancel" class="pay-ghost">Cancel</button>`);
+
+    const $ = id => document.getElementById(id);
+
+    document.querySelectorAll(".pay-tabs button").forEach(btn => btn.addEventListener("click", () => {
+        method = btn.dataset.m;
+        document.querySelectorAll(".pay-tabs button").forEach(x => x.classList.toggle("active", x === btn));
+        $("payFields").innerHTML = PAY_FIELDS[method];
+        $("payMsg").textContent = "";
+    }));
+
+    $("payFill").onclick = () =>
+        PAY_DEMO[method].forEach((v, i) => { $("pf" + (i + 1)).value = v; });
+
+    $("payCancel").onclick = closeModal;
+
+    $("payNow").onclick = () => {
+        const v = i => ($("pf" + i) ? $("pf" + i).value.trim() : "");
+        const digits = v(1).replace(/\s/g, "");
+        let label = "Wallet", error = "";
+
+        if (method === "upi") {
+            label = "UPI";
+            if (!/^[\w.\-]+@[\w]+$/.test(v(1))) error = "Enter a valid UPI ID (name@bank).";
+        } else if (method === "card") {
+            label = "Card ••" + digits.slice(-4);
+            if (!/^\d{16}$/.test(digits)) error = "Enter a 16-digit card number.";
+            else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(v(2))) error = "Expiry must be MM/YY.";
+            else if (!/^\d{3}$/.test(v(3))) error = "Enter the 3-digit CVV.";
+        }
+        if (error) { $("payMsg").textContent = error; return; }
+
+        askNotifPermission();
+        $("payNow").disabled = true;
+        $("payNow").textContent = "Processing…";
+
+        setTimeout(() => {
+            if (digits === "4000000000000002") {
+                $("payMsg").textContent = "Card declined (demo). Try the 4242 test card.";
+                $("payNow").disabled = false;
+                $("payNow").textContent = `Pay ₹${amount}`;
+                return;
+            }
+            closeModal();
+            onSuccess({
+                method: label,
+                txnId: "TX" + Math.floor(100000 + Math.random() * 900000),
+                paidAt: Date.now()
+            });
+        }, 1500);
+    };
+}
+
+/* Payment is required before a slot is actually booked. */
+const originalBookSlot = bookSelectedParkingSlot;
+bookSelectedParkingSlot = function () {
+
+    if (!selectedParkingSlot || !selectedParkingForSlots) return originalBookSlot();
+
+    const parking = selectedParkingForSlots;
+    const fee = Number(parking.rate) || 0;
+
+    openPaymentModal(fee, `Reservation fee (1 hr), ${parking.name}, slot ${selectedParkingSlot.id}`, info => {
+        const before = getBookings().length;
+        originalBookSlot();
+        const list = getBookings();
+        if (list.length > before) {
+            const nb = list[list.length - 1];
+            updateBooking(nb.id, { payment: Object.assign({ hours: 1, amount: fee, status: "Paid" }, info) });
+            addNotification(`✅ ₹${fee} paid. Slot ${nb.slotId} at ${nb.parkingName} is reserved. Booking ID ${nb.id}.`);
+            refreshSidebarPages();
+        }
+    });
+};
+
+
+/* =========================================================
+   EXIT OTP (valid 2 minutes, generated on-device:
+   no SMS, mobile balance or network needed)
+========================================================= */
+
+let otpState = null;
+
+function requestExitOtp(id) {
+
+    const b = getBookings().find(x => x.id === id);
+    if (!b) return;
+
+    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+    otpState = { id, code, expires: Date.now() + 120000, attempts: 0 };
+
+    askNotifPermission();
+    addNotification(`🔐 Exit OTP for slot ${b.slotId}: ${code}. Valid for 2 minutes. Do not share it.`);
+
+    openModal(`
+        <h2>Exit Verification</h2>
+        <p>Your OTP is in your ParkSmart notifications (🔔). No SMS or internet is needed.</p>
+        <input class="pay-input" id="otpInput" inputmode="numeric" maxlength="6" placeholder="6-digit OTP">
+        <p id="otpTimerText" class="pay-demo-note"></p>
+        <p id="otpMsg" class="log-warn"></p>
+        <button type="button" id="otpVerify" class="confirm-booking">Verify &amp; Exit</button>
+        <button type="button" id="otpResend" class="pay-ghost">Resend OTP</button>
+        <button type="button" id="otpCancel" class="pay-ghost">Cancel</button>`);
+
+    const $ = x => document.getElementById(x);
+
+    const tick = () => {
+        const left = Math.max(0, Math.ceil((otpState ? otpState.expires - Date.now() : 0) / 1000));
+        $("otpTimerText").textContent = left
+            ? `OTP expires in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`
+            : "OTP expired. Tap Resend OTP.";
+        if (!left) { otpState = null; $("otpVerify").disabled = true; clearInterval(otpTimer); }
+    };
+
+    clearInterval(otpTimer);
+    otpTimer = setInterval(tick, 1000);
+    tick();
+
+    $("otpCancel").onclick = () => { otpState = null; closeModal(); };
+    $("otpResend").onclick = () => requestExitOtp(id);
+
+    $("otpVerify").onclick = () => {
+        if (!otpState || Date.now() > otpState.expires) {
+            $("otpMsg").textContent = "OTP expired. Please resend.";
+            $("otpVerify").disabled = true;
+            otpState = null;
+            return;
+        }
+        if ($("otpInput").value.trim() === otpState.code) {
+            otpState = null;
+            closeModal();
+            recordExit(id);
+            return;
+        }
+        otpState.attempts++;
+        if (otpState.attempts >= 3) {
+            otpState = null;
+            $("otpVerify").disabled = true;
+            $("otpMsg").textContent = "Too many wrong attempts. Resend a new OTP.";
+        } else {
+            $("otpMsg").textContent = `Wrong OTP (${otpState.attempts}/3).`;
+        }
+    };
+}
+
+
+/* =========================================================
+   SEARCH ANY PLACE (OpenStreetMap) + NEAREST PARKING
+========================================================= */
+
+let nearbyList = null, searchMarker = null, geoTimer = null;
+
+function distanceKm(lat1, lng1, lat2, lng2) {
+    const r = Math.PI / 180, dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) ** 2;
+    return 12742 * Math.asin(Math.sqrt(a));
+}
+
+const originalPerformSearch = performParkingSearch;
+const originalDisplayed = getCurrentlyDisplayedParking;
+
+getCurrentlyDisplayedParking = function () {
+    const list = originalDisplayed();
+    return list.length ? list : (nearbyList || list);
+};
+
+performParkingSearch = function () {
+    nearbyList = null;
+    clearTimeout(geoTimer);
+    originalPerformSearch();
+    const q = parkingSearch ? parkingSearch.value.trim() : "";
+    if (q === "" && searchMarker && parkingMap) { parkingMap.removeLayer(searchMarker); searchMarker = null; }
+    if (q.length >= 3 && originalDisplayed().length === 0) {
+        geoTimer = setTimeout(() => geocodeSearch(q), 700);
+    }
+};
+
+async function geocodeSearch(q) {
+
+    const say = text => { if (searchResults) searchResults.innerHTML = `<div class="search-result-message">${text}</div>`; };
+    say(`Searching for "${escHtml(q)}"…`);
+
+    try {
+        const res = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q=" + encodeURIComponent(q));
+        const data = await res.json();
+        if (q !== parkingSearch.value.trim()) return;
+        if (!data.length) return say(`Place "${escHtml(q)}" not found.`);
+
+        const lat = +data[0].lat, lng = +data[0].lon;
+        const ranked = parkingData
+            .map(p => ({ p, d: distanceKm(lat, lng, p.lat, p.lng) }))
+            .sort((a, b) => a.d - b.d).slice(0, 5);
+
+        nearbyList = ranked.map(x => x.p);
+        displayDashboardParking(nearbyList);
+
+        const name = data[0].display_name.split(",").slice(0, 2).join(",");
+        if (parkingMap) {
+            if (searchMarker) parkingMap.removeLayer(searchMarker);
+            searchMarker = L.marker([lat, lng]).addTo(parkingMap).bindPopup("📍 " + escHtml(name)).openPopup();
+            parkingMap.setView([lat, lng], 12);
+        }
+        const loc = document.getElementById("selectedLocationText");
+        const head = document.getElementById("parkingHeading");
+        if (loc) loc.textContent = name;
+        if (head) head.textContent = "Nearest parking";
+        say(`Nearest parking is ${escHtml(ranked[0].p.name)}, ${ranked[0].d.toFixed(1)} km away.`);
+
+    } catch (e) {
+        say("Could not search this place. Check your internet connection.");
+    }
+}

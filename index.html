@@ -26,7 +26,8 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
+    
+          <style src="parking-8k.jpg"></style>
 </head>
 
 
@@ -576,7 +577,21 @@
     <section id="dashboardView"
              class="dashboard-view hidden">
 
-    <div id="dashboardSection">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand"><span class="brand-logo">P</span><strong>ParkSmart</strong></div>
+        <nav class="sidebar-nav">
+            <button type="button" class="sidebar-link active" data-page="dashboard">🏠 <span>Dashboard</span></button>
+            <button type="button" class="sidebar-link" data-page="reservations">📅 <span>Reservations</span></button>
+            <button type="button" class="sidebar-link" data-page="payments">💳 <span>Payments</span></button>
+            <button type="button" class="sidebar-link" data-page="logs">🚗 <span>Entry &amp; Exit</span></button>
+        </nav>
+        <button type="button" id="sidebarLogout" class="sidebar-link sidebar-logout">🚪 <span>Logout</span></button>
+    </aside>
+
+    <div class="app-content">
+
+    <div id="dashboardSection" class="page">
 
 
         <!-- =================================================
@@ -899,6 +914,11 @@
              MY BOOKINGS
         ================================================== -->
 
+        </div>
+
+        <!-- PAGE: RESERVATIONS -->
+        <div id="page-reservations" class="page" hidden>
+
         <section id="myBookingsSection"
                  class="dashboard-bookings-card">
 
@@ -933,7 +953,39 @@
         </section>
 
         </div>
-        <!-- /#dashboardSection -->
+
+        <!-- PAGE: PAYMENTS -->
+        <div id="page-payments" class="page" hidden>
+            <section class="dashboard-bookings-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <span class="dashboard-label">PAYMENT DETAILS</span>
+                        <h2>Payments</h2>
+                    </div>
+                    <span id="totalPaid" class="parking-count">Total paid: ₹0</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Booking</th><th>Parking</th><th>Duration</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead>
+                        <tbody id="paymentsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- PAGE: ENTRY & EXIT -->
+        <div id="page-logs" class="page" hidden>
+            <section class="dashboard-bookings-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <span class="dashboard-label">INCOMING / OUTGOING</span>
+                        <h2>Entry &amp; Exit Log</h2>
+                    </div>
+                </div>
+                <div id="logsList" class="my-bookings-list"></div>
+            </section>
+        </div>
+        <!-- /pages -->
 
 
         <!-- =================================================
@@ -986,9 +1038,14 @@
 
         </section>
 
+    </div>
+    <!-- /.app-content -->
     </section>
     <!-- /#dashboardView -->
 
+
+    <!-- GENERIC MODAL (demo payment + exit OTP) -->
+    <div id="demoModal" class="dashboard-modal"><div class="success-box"></div></div>
 
     <!-- =====================================================
          BOOKING SUCCESS MODAL

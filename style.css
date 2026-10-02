@@ -3085,3 +3085,207 @@ body {
 
     color: #cbd5e1;
 }
+
+
+/* =====================================
+   SIDEBAR + PAGES
+===================================== */
+
+.page[hidden] { display: none !important; }
+
+.sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+    padding: 20px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+    background: #0a1624;
+    border-right: 1px solid rgba(255,255,255,.08);
+    z-index: 1500;
+}
+
+.sidebar-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; color: #f8fafc; }
+.sidebar-brand .brand-logo { width: 34px; height: 34px; font-size: 16px; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+.sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border: none; border-radius: 10px;
+    background: transparent; color: #94a3b8;
+    font: inherit; font-size: 14px; font-weight: 600;
+    text-align: left; cursor: pointer; transition: .2s;
+}
+.sidebar-link:hover { background: rgba(255,255,255,.06); color: #f8fafc; }
+.sidebar-link.active { background: #2563eb; color: #fff; }
+.sidebar-logout { color: #fca5a5; }
+
+.app-content { margin-left: 205px; padding-top: 4px; }
+
+/* tables / log cards */
+.table-wrap { overflow-x: auto; padding: 0 20px 20px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; color: #e2e8f0; }
+.data-table th, .data-table td { padding: 11px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.08); white-space: nowrap; }
+.data-table th { color: #94a3b8; font-size: 11px; }
+.data-table button, .log-actions button {
+    padding: 7px 12px; border: none; border-radius: 7px;
+    background: #2563eb; color: #fff; font-weight: 600; cursor: pointer;
+}
+.pay-paid { color: #4ade80; font-weight: 700; }
+.pay-pending { color: #facc15; font-weight: 700; }
+
+.log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.log-box { padding: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; font-size: 11px; color: #94a3b8; }
+.log-box strong { display: block; color: #f8fafc; margin: 4px 0 2px; font-size: 12px; }
+.log-box img, .log-photo-empty {
+    width: 100%; height: 90px; object-fit: cover; border-radius: 8px;
+    background: rgba(255,255,255,.05); display: grid; place-items: center;
+}
+.log-warn { color: #fca5a5; font-weight: 700; }
+.log-actions button { width: 100%; }
+
+@media (max-width: 800px) {
+    .sidebar {
+        top: auto; width: auto; right: 0; height: 64px;
+        flex-direction: row; padding: 6px 8px; border-right: none;
+        border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand { display: none; }
+    .sidebar-nav { flex-direction: row; justify-content: space-around; }
+    .sidebar-link { flex-direction: column; gap: 2px; padding: 6px 8px; font-size: 10px; }
+    .app-content { margin-left: 0; padding-bottom: 80px; }
+    .log-grid { grid-template-columns: 1fr; }
+}
+
+
+/* =====================================
+   VIEW SLOTS PAGE (dark theme, matches dashboard)
+   Placed last so it overrides the earlier light styles.
+===================================== */
+
+.parking-slots-page {
+    min-height: 80vh;
+    margin-top: 20px;
+    padding: 26px;
+    background: #0d1b2a;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    color: #f8fafc;
+}
+
+.slots-page-header {
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.slots-page-header h2 { color: #f8fafc; font-size: 24px; }
+.slots-page-header p  { color: #94a3b8; font-size: 13px; }
+
+.back-dashboard-btn {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    color: #e2e8f0;
+}
+.back-dashboard-btn:hover { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.slots-availability {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: rgba(34,197,94,.12);
+    color: #4ade80;
+    font-size: 13px;
+}
+
+.slot-legend { color: #94a3b8; }
+
+/* Entry gate */
+.parking-entry {
+    max-width: 650px;
+    background: rgba(37,99,235,.12);
+    border: 2px dashed rgba(96,165,250,.6);
+    color: #93c5fd;
+}
+
+/* Parking bays */
+.parking-slot-grid {
+    padding: 18px;
+    background: #12263a;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 14px;
+}
+
+.parking-slot {
+    font-family: inherit;
+    border-width: 2px;
+}
+
+.parking-slot.vacant   { background: rgba(34,197,94,.14);  border-color: #22c55e; color: #86efac; }
+.parking-slot.vacant:hover { background: rgba(34,197,94,.3); box-shadow: 0 6px 16px rgba(34,197,94,.25); }
+.parking-slot.occupied { background: rgba(239,68,68,.14);  border-color: #ef4444; color: #fca5a5; opacity: .75; }
+.parking-slot.reserved { background: rgba(234,179,8,.14);  border-color: #eab308; color: #fde047; opacity: .85; }
+.parking-slot.selected {
+    background: #2563eb;
+    border-color: #60a5fa;
+    color: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(96,165,250,.35);
+}
+
+/* Selected slot bar stays visible while scrolling long grids */
+.selected-slot-box {
+    position: sticky;
+    bottom: 12px;
+    margin-top: 18px;
+    background: #0a1624;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+.selected-slot-box p { color: #cbd5e1; }
+.selected-slot-box strong { color: #fff; }
+
+.book-slot-btn:disabled { background: #334155; color: #64748b; }
+
+@media (max-width: 800px) {
+    .parking-slots-page { padding: 16px; }
+    .selected-slot-box { bottom: 74px; }  /* clear the mobile bottom bar */
+}
+
+
+/* =====================================
+   DEMO PAYMENT, OTP, NOTIFICATIONS
+===================================== */
+
+.pay-tabs { display: flex; gap: 6px; margin: 14px 0 10px; }
+.pay-tabs button {
+    flex: 1; padding: 9px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
+    background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer;
+}
+.pay-tabs button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.pay-input {
+    width: 100%; margin-bottom: 8px; padding: 11px 12px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 8px; color: #f8fafc; font: inherit; font-size: 14px; text-align: left;
+}
+.pay-input:focus { outline: none; border-color: #60a5fa; }
+.pay-row { display: flex; gap: 8px; }
+.pay-demo-note { font-size: 11px !important; color: #94a3b8; margin: 8px 0; line-height: 1.5; }
+.pay-ghost {
+    width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px;
+    background: transparent; border: 1px solid rgba(255,255,255,.14);
+    color: #cbd5e1; font-weight: 600; cursor: pointer;
+}
+#otpInput { text-align: center; font-size: 22px; letter-spacing: 8px; }
+#demoModal button:disabled { opacity: .5; cursor: not-allowed; }
+
+.dashboard-header-actions { position: relative; }
+.notif-panel {
+    display: none; position: absolute; right: 0; top: 56px; width: 310px; max-height: 360px;
+    overflow-y: auto; background: #0c1d2e; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px; box-shadow: 0 14px 35px rgba(0,0,0,.5); z-index: 1800;
+}
+.notif-panel.show { display: block; }
+.notif-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.notif-head button { background: none; border: none; color: #60a5fa; cursor: pointer; font-size: 12px; }
+.notif-item { padding: 11px 14px; font-size: 12px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,.05); }
+.notif-item.unread { background: rgba(37,99,235,.12); }
+.notif-item small { display: block; margin-top: 4px; color: #64748b; font-size: 10px; }
+@media (max-width: 800px) { .notif-panel { position: fixed; left: 10px; right: 10px; width: auto; top: 70px; } }
