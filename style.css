@@ -3289,3 +3289,774 @@ body {
 .notif-item.unread { background: rgba(37,99,235,.12); }
 .notif-item small { display: block; margin-top: 4px; color: #64748b; font-size: 10px; }
 @media (max-width: 800px) { .notif-panel { position: fixed; left: 10px; right: 10px; width: auto; top: 70px; } }
+
+
+/* =========================================================================
+   LIGHT THEME + ANIMATED BUTTONS  (placed last, overrides the dark styles)
+   Soft off-white surfaces, calm blue/green accents, gentle motion.
+   Change the colors in one place: the --ps-* variables below.
+========================================================================= */
+
+:root {
+    --ps-bg: #f3f6fb;
+    --ps-surface: #ffffff;
+    --ps-soft: #f8fafc;
+    --ps-text: #1e293b;
+    --ps-muted: #64748b;
+    --ps-border: #e2e8f0;
+    --ps-primary: #2563eb;
+    --ps-green: #059669;
+    --ps-grad: linear-gradient(135deg, #059669 0%, #0284c7 100%);
+    --ps-shadow: 0 1px 2px rgba(15,23,42,.05), 0 8px 24px rgba(15,23,42,.06);
+    --ps-shadow-lg: 0 2px 4px rgba(15,23,42,.06), 0 18px 40px rgba(15,23,42,.12);
+    --ps-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* ---------- Base ---------- */
+
+.dashboard-view {
+    background:
+        radial-gradient(1000px 420px at 8% -8%, #dbeafe 0, transparent 60%),
+        radial-gradient(800px 420px at 100% 0, #d1fae5 0, transparent 55%),
+        var(--ps-bg);
+    color: var(--ps-text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.dashboard-view h1, .dashboard-view h2, .dashboard-view h3,
+.slots-page-header h2, .success-box h2 { color: var(--ps-text); }
+
+.dashboard-title p, .dashboard-card-header p, .slots-page-header p { color: var(--ps-muted); }
+.dashboard-label { color: var(--ps-green); }
+.dashboard-header { border-bottom: 1px solid var(--ps-border); }
+
+/* soft cards */
+.dashboard-search-card, .dashboard-map-card, .dashboard-parking-card,
+.dashboard-bookings-card, .parking-stat, .parking-slots-page, .parking-result,
+.booking-card, .selected-slot-box {
+    background: var(--ps-surface);
+    border: 1px solid var(--ps-border);
+    box-shadow: var(--ps-shadow);
+    color: var(--ps-text);
+}
+
+.dashboard-search-card { background: linear-gradient(135deg, #ffffff, #f0fdf8); }
+
+/* readable small text */
+.parking-result-top small, .parking-result-bottom small, .spaces, .booking-card-header small,
+.booking-card-details span, .parking-stat span, .map-legend, .no-bookings, .no-parking,
+.location-selectors label { color: var(--ps-muted); font-size: 12px; }
+.profile-name small, .profile-user small { color: var(--ps-muted); font-size: 11px; }
+.parking-rate { color: var(--ps-green); }
+.parking-stat strong, .booking-card-details strong, .booking-info strong, .profile-name strong { color: var(--ps-text); }
+.no-parking h3 { color: var(--ps-text); }
+.search-result-message { color: var(--ps-muted); }
+.log-warn { color: #dc2626; }
+
+/* ---------- Header: bell, profile ---------- */
+
+.dashboard-notification, .profile-button {
+    background: var(--ps-surface);
+    border: 1px solid var(--ps-border);
+    color: var(--ps-text);
+    box-shadow: var(--ps-shadow);
+    transition: transform .25s var(--ps-spring), box-shadow .25s;
+}
+.dashboard-notification:hover, .profile-button:hover { transform: translateY(-2px); box-shadow: var(--ps-shadow-lg); }
+.dashboard-notification:hover { animation: bellWiggle .6s ease; }
+.dashboard-notification span { box-shadow: 0 0 0 0 rgba(239,68,68,.6); animation: dotPulse 1.8s infinite; }
+
+.profile-dropdown, .notif-panel {
+    background: var(--ps-surface);
+    border: 1px solid var(--ps-border);
+    box-shadow: var(--ps-shadow-lg);
+}
+.profile-dropdown.show, .notif-panel.show { animation: dropIn .22s ease both; }
+.profile-dropdown button { color: var(--ps-muted); }
+.profile-dropdown button:hover { background: var(--ps-soft); color: var(--ps-text); }
+.profile-dropdown .logout-button { color: #dc2626; }
+.profile-divider { background: var(--ps-border); }
+
+.notif-head { border-bottom: 1px solid var(--ps-border); }
+.notif-head button { color: var(--ps-primary); }
+.notif-item { color: var(--ps-text); border-bottom: 1px solid var(--ps-border); }
+.notif-item.unread { background: #eff6ff; }
+.notif-item small { color: var(--ps-muted); }
+
+/* ---------- Search ---------- */
+
+.location-search, .location-selectors select, .pay-input {
+    background: var(--ps-surface);
+    border: 1px solid var(--ps-border);
+    color: var(--ps-text);
+    transition: border-color .2s, box-shadow .2s;
+}
+.location-search:focus-within, .location-selectors select:focus, .pay-input:focus {
+    border-color: var(--ps-primary);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.14);
+    outline: none;
+}
+.location-search input { color: var(--ps-text); }
+.location-search input::placeholder { color: #94a3b8; }
+.location-search button { color: var(--ps-muted); }
+.location-search-results { background: var(--ps-surface); border: 1px solid var(--ps-border); box-shadow: var(--ps-shadow-lg); }
+
+/* ---------- Parking cards ---------- */
+
+.parking-result { transition: transform .3s var(--ps-spring), box-shadow .3s, border-color .3s; animation: riseIn .5s ease both; }
+.parking-result:hover { transform: translateY(-4px); border-color: #6ee7b7; box-shadow: var(--ps-shadow-lg); }
+.parking-result:nth-child(2) { animation-delay: .06s; }
+.parking-result:nth-child(3) { animation-delay: .12s; }
+.parking-result:nth-child(4) { animation-delay: .18s; }
+.parking-result:nth-child(n+5) { animation-delay: .24s; }
+
+.parking-status { font-size: 11px; }
+.parking-status.available { background: #dcfce7; color: #166534; }
+.parking-status.limited   { background: #fef3c7; color: #92400e; }
+.parking-status.full      { background: #fee2e2; color: #991b1b; }
+
+.stat-symbol { background: #eff6ff; }
+.parking-stat { transition: transform .3s var(--ps-spring), box-shadow .3s; }
+.parking-stat:hover { transform: translateY(-3px); box-shadow: var(--ps-shadow-lg); }
+
+.parking-count { padding: 6px 12px; border-radius: 20px; background: #ecfdf5; color: #047857; font-size: 12px; font-weight: 700; }
+
+.parking-list { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.dashboard-map-card { border-radius: 18px; }
+
+/* ---------- Bookings, payments, logs ---------- */
+
+.booking-card { transition: transform .3s var(--ps-spring), box-shadow .3s; animation: riseIn .5s ease both; }
+.booking-card:hover { transform: translateY(-3px); box-shadow: var(--ps-shadow-lg); }
+.booking-status { background: #fef3c7; color: #92400e; }
+
+.data-table { color: var(--ps-text); }
+.data-table th { background: var(--ps-soft); color: var(--ps-muted); }
+.data-table th, .data-table td { border-bottom: 1px solid var(--ps-border); }
+.data-table tbody tr { transition: background .2s; }
+.data-table tbody tr:hover { background: #f1f5f9; }
+.pay-paid { color: #059669; }
+.pay-pending { color: #b45309; }
+
+.log-box { border: 1px solid var(--ps-border); background: var(--ps-soft); color: var(--ps-muted); }
+.log-box strong { color: var(--ps-text); }
+.log-box img, .log-photo-empty { background: #e2e8f0; }
+
+/* ---------- Sidebar ---------- */
+
+.sidebar { background: var(--ps-surface); border-right: 1px solid var(--ps-border); box-shadow: 4px 0 24px rgba(15,23,42,.05); }
+.sidebar-brand { color: var(--ps-text); }
+.sidebar-link { color: var(--ps-muted); transition: transform .25s var(--ps-spring), background .2s, color .2s, box-shadow .25s; }
+.sidebar-link:hover { background: #f1f5f9; color: var(--ps-text); transform: translateX(4px); }
+.sidebar-link.active { background: var(--ps-grad); color: #fff; box-shadow: 0 8px 18px rgba(2,132,199,.28); transform: none; }
+.sidebar-logout { color: #dc2626; }
+.sidebar-logout:hover { background: #fef2f2; color: #b91c1c; }
+@media (max-width: 800px) {
+    .sidebar { box-shadow: 0 -6px 24px rgba(15,23,42,.08); border-top: 1px solid var(--ps-border); }
+    .sidebar-link:hover { transform: translateY(-2px); }
+}
+
+/* ---------- View Slots page ---------- */
+
+.parking-slots-page { background: var(--ps-surface); color: var(--ps-text); }
+.slots-page-header { border-bottom: 1px solid var(--ps-border); }
+.slots-availability { background: #ecfdf5; color: #047857; }
+.slot-legend { color: var(--ps-muted); }
+.parking-entry { background: #eff6ff; border: 2px dashed #93c5fd; color: #1d4ed8; animation: gateGlow 2.4s ease-in-out infinite; }
+.parking-slot-grid { background: #eef2f7; border: 1px solid var(--ps-border); }
+
+.parking-slot { transition: transform .25s var(--ps-spring), box-shadow .25s, background .2s; }
+.parking-slot.vacant   { background: #dcfce7; border-color: #22c55e; color: #166534; }
+.parking-slot.vacant:hover { background: #bbf7d0; transform: translateY(-4px) scale(1.05); box-shadow: 0 10px 18px rgba(34,197,94,.3); }
+.parking-slot.occupied { background: #fee2e2; border-color: #f87171; color: #991b1b; opacity: .8; }
+.parking-slot.reserved { background: #fef3c7; border-color: #fbbf24; color: #92400e; opacity: .9; }
+.parking-slot.selected { background: var(--ps-grad); border-color: transparent; color: #fff; transform: scale(1.06); animation: slotPulse 1.6s ease-in-out infinite; }
+
+.selected-slot-box { box-shadow: var(--ps-shadow-lg); }
+.selected-slot-box p { color: var(--ps-muted); }
+.selected-slot-box strong { color: var(--ps-text); }
+
+/* ---------- Modals (booking, payment, OTP) ---------- */
+
+.dashboard-modal { background: rgba(15,23,42,.45); backdrop-filter: blur(6px); }
+.booking-box, .success-box { background: var(--ps-surface); border: 1px solid var(--ps-border); box-shadow: var(--ps-shadow-lg); color: var(--ps-text); }
+.success-box p, .booking-title p, .price-summary span, .duration-area label, .duration-control span { color: var(--ps-muted); }
+.booking-info div { background: var(--ps-soft); border: 1px solid var(--ps-border); }
+.booking-info span { color: var(--ps-muted); }
+.duration-control button { background: var(--ps-surface); border: 1px solid var(--ps-border); color: var(--ps-text); }
+.price-summary, .total-row { border-color: var(--ps-border); }
+.total-row span { color: var(--ps-text); }
+.total-row strong, .duration-control strong { color: var(--ps-green); }
+.modal-close { background: #f1f5f9; color: var(--ps-text); }
+.success-check { background: #dcfce7; color: #16a34a; animation: checkPop .5s var(--ps-spring) both; }
+
+.pay-tabs button { background: var(--ps-surface); border: 1px solid var(--ps-border); color: var(--ps-muted); transition: all .2s var(--ps-spring); }
+.pay-tabs button:hover { transform: translateY(-2px); color: var(--ps-text); }
+.pay-tabs button.active { background: var(--ps-grad); border-color: transparent; color: #fff; box-shadow: 0 6px 14px rgba(2,132,199,.25); }
+.pay-demo-note { color: var(--ps-muted); }
+
+/* =========================================================================
+   BUTTONS: spring hover lift, shine sweep, press-down, soft glow
+========================================================================= */
+
+.search-parking-btn, .confirm-booking, .book-slot-btn, .view-slots-btn,
+.data-table button, .log-actions button, .main-button,
+.parking-book-btn, .current-location-btn, .back-dashboard-btn,
+.cancel-booking-btn, .pay-ghost {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .28s var(--ps-spring), box-shadow .28s ease,
+                background .25s ease, color .25s ease, border-color .25s ease;
+}
+
+/* primary (filled gradient) */
+.search-parking-btn, .confirm-booking, .book-slot-btn, .view-slots-btn,
+.data-table button, .log-actions button {
+    background: var(--ps-grad);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 14px rgba(2,132,199,.28), inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+/* secondary (soft outline) */
+.parking-book-btn, .current-location-btn, .back-dashboard-btn, .pay-ghost {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    box-shadow: 0 2px 6px rgba(15,23,42,.05);
+}
+.back-dashboard-btn, .pay-ghost { background: var(--ps-surface); color: var(--ps-text); border-color: var(--ps-border); }
+
+/* danger */
+.cancel-booking-btn { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; box-shadow: 0 2px 6px rgba(15,23,42,.05); }
+
+/* shine sweep */
+.search-parking-btn::after, .confirm-booking::after, .book-slot-btn::after, .view-slots-btn::after,
+.data-table button::after, .log-actions button::after, .parking-book-btn::after {
+    content: "";
+    position: absolute; top: 0; left: -80%;
+    width: 50%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+    transform: skewX(-20deg);
+    transition: left .65s ease;
+    pointer-events: none;
+}
+.search-parking-btn:hover::after, .confirm-booking:hover::after, .book-slot-btn:hover::after,
+.view-slots-btn:hover::after, .data-table button:hover::after, .log-actions button:hover::after,
+.parking-book-btn:hover::after { left: 130%; }
+
+/* hover = lift */
+.search-parking-btn:hover:not(:disabled), .confirm-booking:hover:not(:disabled), .book-slot-btn:hover:not(:disabled),
+.view-slots-btn:hover:not(:disabled), .data-table button:hover, .log-actions button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 14px 26px rgba(2,132,199,.35), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.parking-book-btn:hover:not(:disabled) { background: var(--ps-grad); color: #fff; border-color: transparent; transform: translateY(-3px); box-shadow: 0 12px 22px rgba(2,132,199,.3); }
+.current-location-btn:hover, .back-dashboard-btn:hover, .pay-ghost:hover { transform: translateY(-2px); background: #fff; border-color: #6ee7b7; color: #047857; box-shadow: var(--ps-shadow-lg); }
+.cancel-booking-btn:hover { background: #fee2e2; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(220,38,38,.18); }
+
+/* press = sink in */
+.search-parking-btn:active:not(:disabled), .confirm-booking:active:not(:disabled), .book-slot-btn:active:not(:disabled),
+.view-slots-btn:active, .data-table button:active, .log-actions button:active,
+.parking-book-btn:active:not(:disabled), .current-location-btn:active, .back-dashboard-btn:active,
+.cancel-booking-btn:active, .pay-ghost:active, .pay-tabs button:active, .sidebar-link:active {
+    transform: translateY(1px) scale(.97);
+    box-shadow: inset 0 3px 8px rgba(15,23,42,.18);
+    transition-duration: .08s;
+}
+
+/* idle pulse on the main call-to-action so users notice it */
+.book-slot-btn:not(:disabled), #payNow:not(:disabled), #otpVerify:not(:disabled) { animation: ctaGlow 2.4s ease-in-out infinite; }
+
+/* disabled */
+.book-slot-btn:disabled, .parking-book-btn:disabled, #demoModal button:disabled {
+    background: #e2e8f0; color: #94a3b8; border: 1px solid var(--ps-border);
+    box-shadow: none; transform: none; animation: none; cursor: not-allowed;
+}
+
+/* keyboard focus */
+button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 3px solid rgba(37,99,235,.45);
+    outline-offset: 2px;
+}
+
+/* bigger tap targets on phones */
+@media (max-width: 700px) {
+    .parking-book-btn, .book-slot-btn, .confirm-booking, .pay-ghost, .cancel-booking-btn { min-height: 46px; }
+}
+
+/* =========================================================================
+   MOTION
+========================================================================= */
+
+.page:not([hidden]) { animation: pageIn .45s ease both; }
+.parking-slots-page, .dashboard-modal.show .booking-box, .dashboard-modal.show .success-box { animation: popIn .35s var(--ps-spring) both; }
+
+@keyframes pageIn   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes riseIn   { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes popIn    { from { opacity: 0; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes dropIn   { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes checkPop { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
+@keyframes bellWiggle { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-14deg); } 40% { transform: rotate(12deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(5deg); } }
+@keyframes dotPulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.55); } 70% { box-shadow: 0 0 0 9px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+@keyframes ctaGlow  { 0%,100% { box-shadow: 0 6px 14px rgba(2,132,199,.28), inset 0 1px 0 rgba(255,255,255,.35); } 50% { box-shadow: 0 8px 26px rgba(5,150,105,.5), inset 0 1px 0 rgba(255,255,255,.35); } }
+@keyframes slotPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(2,132,199,.5); } 50% { box-shadow: 0 0 0 9px rgba(2,132,199,0); } }
+@keyframes gateGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,.25); } 50% { box-shadow: 0 0 0 8px rgba(37,99,235,0); } }
+
+/* respect users who turn animations off in their device settings */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
+/* =========================================================
+   PARKSMART BOOKING -> PAYMENT -> RECEIPT FEATURE
+   Added without changing the existing dashboard styling.
+========================================================= */
+
+.parksmart-feature-modal {
+    width: min(720px, calc(100vw - 30px));
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--ps-surface, #ffffff);
+    color: var(--ps-text, #17232d);
+    border: 1px solid var(--ps-border, #e2e8f0);
+    border-radius: 20px;
+    padding: 26px;
+    box-shadow: 0 25px 70px rgba(15,23,42,.22);
+}
+
+.parksmart-feature-modal h2 { margin: 0 0 7px; }
+.parksmart-feature-modal .feature-subtitle { margin: 0 0 20px; color: var(--ps-muted, #64748b); font-size: 13px; }
+
+.parksmart-booking-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.parksmart-booking-grid .full { grid-column: 1 / -1; }
+.parksmart-field { display: flex; flex-direction: column; gap: 7px; }
+.parksmart-field label { font-size: 13px; font-weight: 700; color: var(--ps-text, #17232d); }
+.parksmart-field input,
+.parksmart-field select {
+    width: 100%;
+    padding: 12px 13px;
+    border: 1px solid var(--ps-border, #dbe3ea);
+    border-radius: 10px;
+    background: var(--ps-surface, #fff);
+    color: var(--ps-text, #17232d);
+    outline: none;
+}
+.parksmart-field input:focus,
+.parksmart-field select:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,.10); }
+
+.parksmart-booking-summary {
+    margin-top: 20px;
+    padding: 17px;
+    border-radius: 13px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+.parksmart-booking-summary .sum-row { display:flex; justify-content:space-between; gap:15px; padding:6px 0; font-size:13px; }
+.parksmart-booking-summary .sum-row span { color:#64748b; }
+.parksmart-booking-summary .sum-total { border-top:1px solid #e2e8f0; margin-top:8px; padding-top:13px; font-size:18px; font-weight:800; }
+.parksmart-booking-summary .sum-total strong { color:#0284c7; }
+
+.parksmart-feature-actions { display:flex; gap:10px; margin-top:20px; }
+.parksmart-feature-actions button { flex:1; min-height:45px; }
+.parksmart-save-btn { background: linear-gradient(135deg,#0284c7,#2563eb); color:#fff; border:0; border-radius:10px; font-weight:800; cursor:pointer; }
+.parksmart-cancel-btn { background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:10px; font-weight:700; cursor:pointer; }
+
+.parksmart-payment-header { display:flex; justify-content:space-between; gap:15px; align-items:flex-start; margin-bottom:18px; }
+.parksmart-payment-amount { font-size:24px; font-weight:900; color:#0284c7; }
+.parksmart-payment-methods { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-bottom:17px; }
+.parksmart-method-btn { padding:12px 7px; border:1px solid #e2e8f0; background:#fff; border-radius:11px; cursor:pointer; font-weight:700; color:#475569; }
+.parksmart-method-btn.active { border-color:#0284c7; background:#eff6ff; color:#0369a1; box-shadow:0 0 0 2px rgba(2,132,199,.08); }
+.parksmart-method-btn span { display:block; font-size:20px; margin-bottom:4px; }
+
+.parksmart-payment-panel { background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:18px; }
+.parksmart-qr-wrap { text-align:center; }
+.parksmart-qr {
+    width:190px; height:190px; margin:14px auto;
+    background-color:#fff;
+    background-image:
+      linear-gradient(90deg,#111 12px,transparent 12px),linear-gradient(#111 12px,transparent 12px),
+      linear-gradient(90deg,transparent 16px,#111 16px,#111 28px,transparent 28px),linear-gradient(transparent 16px,#111 16px,#111 28px,transparent 28px);
+    background-size:38px 38px,38px 38px,38px 38px,38px 38px;
+    border:10px solid #fff; box-shadow:0 6px 22px rgba(15,23,42,.15); position:relative;
+}
+.parksmart-qr:before,.parksmart-qr:after { content:""; position:absolute; width:43px;height:43px;border:9px solid #111;background:#fff; }
+.parksmart-qr:before { left:5px;top:5px; }
+.parksmart-qr:after { right:5px;bottom:5px; }
+.parksmart-qr-center { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:38px;height:38px;background:#fff;border:6px solid #2563eb;border-radius:8px;display:grid;place-items:center;font-size:10px;font-weight:900;color:#2563eb; }
+.parksmart-upi-note { text-align:center; color:#64748b; font-size:12px; }
+
+.parksmart-pay-fields { display:grid; gap:13px; }
+.parksmart-pay-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.parksmart-pay-fields label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; color:#475569; }
+.parksmart-pay-fields input,.parksmart-pay-fields select { width:100%; padding:12px; border:1px solid #dbe3ea; border-radius:9px; background:#fff; }
+.parksmart-cash-note { padding:14px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; color:#92400e; font-size:13px; }
+.parksmart-pay-error { min-height:18px; color:#dc2626; font-size:12px; margin:8px 0; }
+.parksmart-pay-now { width:100%; padding:14px; border:0; border-radius:10px; background:linear-gradient(135deg,#16a34a,#059669); color:#fff; font-weight:900; cursor:pointer; }
+.parksmart-pay-now:disabled { opacity:.65; cursor:wait; }
+.parksmart-payment-secure { text-align:center; color:#64748b; font-size:11px; margin-top:10px; }
+
+.parksmart-payment-details { margin-top:18px; padding:18px; background:#fff; border:1px solid rgba(255,255,255,.08); border-radius:14px; }
+.parksmart-payment-details .detail-title { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:14px; }
+.parksmart-payment-details .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px; }
+.parksmart-payment-details .detail-item { padding:9px 0; border-bottom:1px solid rgba(148,163,184,.15); }
+.parksmart-payment-details .detail-item span { display:block; color:#94a3b8; font-size:11px; margin-bottom:3px; }
+.parksmart-payment-details .detail-item strong { color:#f8fafc; font-size:13px; }
+.parksmart-payment-details .receipt-action { margin-top:15px; }
+.parksmart-payment-details .receipt-action button { padding:10px 15px; border:0; border-radius:9px; background:#0284c7; color:#fff; font-weight:800; cursor:pointer; }
+
+.parksmart-receipt-modal { position:fixed; inset:0; z-index:10050; display:grid; place-items:center; padding:20px; background:rgba(15,23,42,.58); backdrop-filter:blur(7px); }
+.parksmart-receipt-modal[hidden] { display:none; }
+.parksmart-receipt-card { position:relative; width:min(430px,100%); max-height:92vh; overflow:auto; background:#fff; color:#17232d; border-radius:22px; padding:26px; box-shadow:0 30px 90px rgba(0,0,0,.28); }
+.parksmart-receipt-close { position:absolute; right:14px; top:12px; width:34px;height:34px;border:0;border-radius:50%;background:#f1f5f9;color:#334155;font-size:23px;cursor:pointer; }
+.parksmart-receipt-success { text-align:center; padding:7px 15px 20px; }
+.parksmart-receipt-check { width:58px;height:58px;border-radius:50%;background:#dcfce7;color:#16a34a;display:grid;place-items:center;margin:0 auto 10px;font-size:30px;font-weight:900; }
+.parksmart-receipt-success h2 { margin:0 0 5px; }
+.parksmart-receipt-success p { color:#64748b; margin:0 0 12px; font-size:13px; }
+.parksmart-receipt-success > strong { font-size:30px; color:#0f172a; }
+.parksmart-receipt-line { height:1px; background:#e5e7eb; margin:14px 0; }
+.parksmart-receipt-row { display:flex; justify-content:space-between; gap:15px; padding:7px 0; font-size:13px; }
+.parksmart-receipt-row span { color:#64748b; }
+.parksmart-receipt-row strong { text-align:right; max-width:58%; word-break:break-word; }
+.parksmart-receipt-total { display:flex; justify-content:space-between; font-size:17px; font-weight:900; padding:4px 0 14px; }
+.parksmart-receipt-brand { text-align:center; padding:14px 0; border-top:1px dashed #cbd5e1; margin-top:4px; }
+.parksmart-receipt-brand strong { display:block; color:#0284c7; font-size:18px; }
+.parksmart-receipt-brand span { color:#64748b; font-size:11px; }
+.parksmart-print-receipt { width:100%; padding:12px; border:0; border-radius:10px; background:#0f172a; color:#fff; font-weight:800; cursor:pointer; }
+
+@media (max-width:700px) {
+    .parksmart-booking-grid,.parksmart-pay-row,.parksmart-payment-details .detail-grid { grid-template-columns:1fr; }
+    .parksmart-booking-grid .full { grid-column:auto; }
+    .parksmart-payment-methods { grid-template-columns:1fr 1fr; }
+    .parksmart-feature-modal { padding:19px; }
+}
+
+@media print {
+    body * { visibility:hidden !important; }
+    .parksmart-receipt-card,.parksmart-receipt-card * { visibility:visible !important; }
+    .parksmart-receipt-modal { position:absolute; inset:0; background:#fff; padding:0; }
+    .parksmart-receipt-card { box-shadow:none; width:100%; max-width:500px; }
+    .parksmart-receipt-close,.parksmart-print-receipt { display:none !important; }
+}
+
+
+/* =========================================================
+   PARKSMART BOOKING + PAYMENT MODAL
+========================================================= */
+
+.parksmart-booking-form,
+.parksmart-payment-form {
+    width: min(100%, 520px);
+}
+
+.parksmart-booking-form h2,
+.parksmart-payment-form h2 {
+    margin-bottom: 8px;
+}
+
+.parksmart-booking-form label {
+    display: block;
+    margin: 12px 0 6px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.parksmart-booking-form .pay-input,
+.parksmart-payment-form .pay-input {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.parksmart-booking-summary {
+    display: grid;
+    gap: 8px;
+    margin: 14px 0;
+    padding: 12px;
+    border-radius: 12px;
+    background: #f5f8fa;
+}
+
+.parksmart-booking-summary div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.parksmart-payment-amount {
+    margin: 14px 0;
+    padding: 14px;
+    border-radius: 12px;
+    background: #f5f8fa;
+    font-size: 16px;
+}
+
+.parksmart-payment-methods {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.parksmart-payment-methods button {
+    padding: 10px;
+    border: 1px solid #d8e0e5;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.parksmart-payment-methods button.selected {
+    border-color: #19e58b;
+    background: #eafff5;
+}
+
+.parksmart-qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px;
+    margin: 10px 0;
+    border-radius: 12px;
+    background: #f5f8fa;
+}
+
+.parksmart-qr {
+    width: 120px;
+    height: 120px;
+    display: grid;
+    place-items: center;
+    font-size: 82px;
+    background: white;
+    border: 2px solid #17232d;
+}
+
+/* =========================================================
+   BOOKING DETAILS - STEP 1
+========================================================= */
+.parksmart-booking-form {
+    width: min(100%, 620px);
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.parksmart-step-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.parksmart-step-badge {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #0284c7;
+    color: #fff;
+    font-weight: 800;
+}
+
+.parksmart-step-head h2 {
+    margin: 0 0 3px;
+}
+
+.parksmart-step-head p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.parksmart-location-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #f8fafc;
+    margin-bottom: 10px;
+}
+
+.parksmart-location-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #e0f2fe;
+    font-size: 20px;
+}
+
+.parksmart-location-card strong,
+.parksmart-location-card span {
+    display: block;
+}
+
+.parksmart-location-card span {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.parksmart-slot-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    margin-bottom: 14px;
+}
+
+.parksmart-slot-banner span {
+    color: #166534;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.parksmart-slot-banner strong {
+    color: #15803d;
+    font-size: 18px;
+}
+
+.parksmart-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+}
+
+.parksmart-form-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.parksmart-form-field label {
+    margin: 0 0 5px;
+}
+
+.parksmart-confirmation-card {
+    margin: 15px 0 10px;
+    padding: 13px 15px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.parksmart-confirmation-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 7px 0;
+    color: #475569;
+    font-size: 13px;
+}
+
+.parksmart-confirmation-row strong {
+    color: #0f172a;
+}
+
+.parksmart-confirmation-row.total-row {
+    margin-top: 5px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.parksmart-confirmation-row.total-row strong {
+    color: #0284c7;
+}
+
+.parksmart-next-note {
+    padding: 9px 11px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+    .parksmart-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .parksmart-form-field.full-width {
+        grid-column: auto;
+    }
+}
+
+/* ---------- Inline parking receipt inside Payments ---------- */
+.parksmart-payment-receipt {
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    padding: 20px;
+    box-shadow: 0 12px 30px rgba(15,23,42,.08);
+}
+.parksmart-payment-receipt-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    padding-bottom:16px;
+    border-bottom:1px dashed #cbd5e1;
+}
+.parksmart-payment-receipt-label { font-size:11px; font-weight:900; letter-spacing:.12em; color:#0284c7; }
+.parksmart-payment-receipt-head h3 { margin:4px 0; color:#0f172a; font-size:20px; }
+.parksmart-payment-receipt-head p { margin:0; color:#64748b; font-size:13px; }
+.parksmart-payment-receipt-head > strong { font-size:28px; color:#059669; white-space:nowrap; }
+.parksmart-payment-receipt-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; margin-top:8px; }
+.parksmart-payment-receipt-grid > div { padding:11px 0; border-bottom:1px solid #e2e8f0; }
+.parksmart-payment-receipt-grid span { display:block; font-size:11px; color:#64748b; margin-bottom:3px; }
+.parksmart-payment-receipt-grid strong { display:block; color:#17232d; font-size:13px; word-break:break-word; }
+.parksmart-receipt-paid { color:#059669 !important; }
+.parksmart-payment-receipt-actions { display:flex; gap:10px; margin-top:16px; }
+.parksmart-payment-receipt-actions button { border:0; border-radius:10px; padding:11px 15px; background:#0284c7; color:#fff; font-weight:800; cursor:pointer; }
+.parksmart-payment-receipt-actions button.secondary { background:#0f172a; }
+@media (max-width:600px) {
+    .parksmart-payment-receipt-head { align-items:flex-start; flex-direction:column; }
+    .parksmart-payment-receipt-grid { grid-template-columns:1fr; }
+    .parksmart-payment-receipt-actions { flex-direction:column; }
+}
+
+/* Receipt is shown inside Payment Details instead of a separate popup. */
+.parksmart-payment-receipt.full-receipt-view {
+    background: #ffffff;
+    color: #17232d;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 22px;
+    margin-top: 0;
+}
+.parksmart-inline-receipt-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 2px dashed #cbd5e1;
+    font-size: 18px;
+    font-weight: 800;
+}
+.parksmart-inline-receipt-total strong { color: #0284c7; }

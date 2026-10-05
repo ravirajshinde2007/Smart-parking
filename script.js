@@ -862,6 +862,26 @@ const BOOKING_STORAGE_KEY =
    INITIALIZE PARKING DASHBOARD
 ========================================================= */
 
+function clearParkingResultsUntilLocationSelected() {
+
+    const parkingList = document.getElementById("parkingList");
+    if (parkingList) {
+        parkingList.innerHTML = `
+            <div class="no-parking parking-location-prompt">
+                <h3>📍 Select a location to find parking</h3>
+                <p>Use <strong>Current Location</strong> or search for an area, city or locality.</p>
+            </div>
+        `;
+    }
+
+    updateParkingCount(0);
+
+    if (typeof updateDashboardMap === "function") {
+        updateDashboardMap([]);
+    }
+}
+
+
 function initializeParkingDashboard() {
 
     const mapElement =
@@ -889,9 +909,8 @@ function initializeParkingDashboard() {
         }
     ).addTo(parkingMap);
 
-    displayDashboardParking(
-        parkingData
-    );
+    // Keep the dashboard empty until the user selects a location.
+    clearParkingResultsUntilLocationSelected();
 
     displayMyBookings();
 
@@ -1507,9 +1526,7 @@ function performParkingSearch() {
 
     if (searchText === "") {
 
-        displayDashboardParking(
-            parkingData
-        );
+        clearParkingResultsUntilLocationSelected();
 
 
         const selectedLocationText =
@@ -1990,12 +2007,38 @@ if (currentLocationBtn) {
 
 
                     /*
-                       SHOW ALL PARKING
+                       SHOW ONLY PARKING NEAR THE CURRENT LOCATION.
+                       Do not show unrelated parking from other cities.
                     */
+                    const nearbyParking = parkingData
+                        .map(parking => ({
+                            parking,
+                            distance: distanceKm(
+                                latitude,
+                                longitude,
+                                parking.lat,
+                                parking.lng
+                            )
+                        }))
+                        .filter(item => item.distance <= 15)
+                        .sort((a, b) => a.distance - b.distance)
+                        .map(item => item.parking);
 
-                    displayDashboardParking(
-                        parkingData
-                    );
+                    displayDashboardParking(nearbyParking);
+
+                    if (searchResults && nearbyParking.length === 0) {
+                        searchResults.innerHTML = `
+                            <div class="search-result-message">
+                                No parking found within 15 km of your current location.
+                            </div>
+                        `;
+                    } else if (searchResults) {
+                        searchResults.innerHTML = `
+                            <div class="search-result-message">
+                                ${nearbyParking.length} parking location(s) found near you.
+                            </div>
+                        `;
+                    }
 
 
                     currentLocationBtn.disabled =
@@ -2677,232 +2720,572 @@ function updateSelectedSlotUI() {
 
 function bookSelectedParkingSlot() {
 
-    if (
-        !selectedParkingSlot ||
-        !selectedParkingForSlots
-    ) {
-
-        showToast(
-            "Please select a vacant parking slot first."
-        );
-
+    if (!selectedParkingSlot || !selectedParkingForSlots) {
+        showToast("Please select a vacant parking slot first.");
         return;
-
     }
 
+    const parking = selectedParkingForSlots;
+    const slots = createParkingSlots(parking);
+    const slot = slots.find(item => item.id === selectedParkingSlot.id);
 
-    const parking =
-        selectedParkingForSlots;
-
-
-    const slots =
-        createParkingSlots(
-            parking
-        );
-
-
-    const slot =
-        slots.find(
-            item =>
-                item.id ===
-                selectedParkingSlot.id
-        );
-
-
-    if (!slot) {
-
-        showToast(
-            "Selected slot could not be found."
-        );
-
-        return;
-
-    }
-
-
-    /*
-       Make sure slot is still vacant.
-    */
-
-    if (slot.status !== "vacant") {
-
-        showToast(
-            "This slot is no longer available."
-        );
-
-        selectedParkingSlot =
-            null;
-
+    if (!slot || slot.status !== "vacant") {
+        showToast("This slot is no longer available.");
+        selectedParkingSlot = null;
         renderParkingSlots();
-
         updateSelectedSlotDisplay();
-
         return;
-
     }
 
+    const amount = Number(parking.rate) || 0;
+    const slotId = slot.id;
 
-    /*
-       Change slot to reserved.
-    */
-
-    slot.status =
-        "reserved";
+    openBookingDetailsModal(parking, slotId, amount);
+}
 
 
-    /*
-       Reduce available spaces.
-    */
+/* =========================================================
+   BOOKING DETAILS + PAYMENT
+========================================================= */
+
+function openBookingDetailsModal(parking, slotId, amount) {
+
+    const modal = document.getElementById("demoModal");
+
+    if (!modal) {
+        showToast("Booking details screen is unavailable.");
+        return;
+    }
+
+    const box = modal.querySelector(".success-box");
+    const startTime = new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+    box.innerHTML = `
+        <div class="parksmart-booking-form">
+            <div class="parksmart-step-head">
+                <span class="parksmart-step-badge">1</span>
+                <div>
+                    <h2>🅿️ Booking Details</h2>
+                    <p>Check your parking details before continuing to payment.</p>
+                </div>
+            </div>
+
+            <div class="parksmart-location-card">
+                <div class="parksmart-location-icon">📍</div>
+                <div>
+                    <strong>${escHtml(parking.name)}</strong>
+                    <span>${escHtml(parking.area || "Parking Area")}, ${escHtml(parking.city || "")}</span>
+                </div>
+            </div>
+
+            <div class="parksmart-slot-banner">
+                <span>Selected Parking Slot</span>
+                <strong>${escHtml(slotId)}</strong>
+            </div>
+
+            <div class="parksmart-form-grid">
+                <div class="parksmart-form-field">
+                    <label for="bookingVehicleType">Vehicle Type</label>
+                    <select id="bookingVehicleType" class="pay-input">
+                        <option value="Car">🚗 Car</option>
+                        <option value="SUV">🚙 SUV</option>
+                        <option value="Bike">🏍️ Bike</option>
+                        <option value="EV">⚡ EV</option>
+                    </select>
+                </div>
+
+                <div class="parksmart-form-field">
+                    <label for="bookingCarType">Car Type / Model</label>
+                    <input id="bookingCarType" class="pay-input"
+                           placeholder="e.g. Swift, Creta, Nexon">
+                </div>
+
+                <div class="parksmart-form-field full-width">
+                    <label for="bookingCarNumber">Car Number</label>
+                    <input id="bookingCarNumber" class="pay-input"
+                           placeholder="e.g. MH 15 AB 1234"
+                           maxlength="15">
+                </div>
+
+                <div class="parksmart-form-field full-width">
+                    <label for="bookingDuration">Time Duration</label>
+                    <select id="bookingDuration" class="pay-input">
+                        <option value="1">1 Hour</option>
+                        <option value="2">2 Hours</option>
+                        <option value="3">3 Hours</option>
+                        <option value="4">4 Hours</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="parksmart-confirmation-card">
+                <div class="parksmart-confirmation-row">
+                    <span>Parking Slot</span>
+                    <strong>${escHtml(slotId)}</strong>
+                </div>
+                <div class="parksmart-confirmation-row">
+                    <span>Start Time</span>
+                    <strong>${startTime}</strong>
+                </div>
+                <div class="parksmart-confirmation-row total-row">
+                    <span>Total Amount</span>
+                    <strong id="bookingTotalAmount">₹${amount}</strong>
+                </div>
+            </div>
+
+            <div class="parksmart-next-note">
+                🔒 Your details will be saved before you continue to the payment screen.
+            </div>
+
+            <button type="button" id="saveBookingDetails" class="confirm-booking">
+                Save & Continue to Payment →
+            </button>
+            <button type="button" id="cancelBookingDetails" class="pay-ghost">
+                Cancel
+            </button>
+        </div>
+    `;
+
+    modal.classList.add("show");
+    modal.style.display = "flex";
+
+    const duration = document.getElementById("bookingDuration");
+    const total = document.getElementById("bookingTotalAmount");
+
+    if (duration && total) {
+        duration.addEventListener("change", function () {
+            total.textContent = `₹${amount * Number(duration.value)}`;
+        });
+    }
+
+    document.getElementById("cancelBookingDetails").onclick = closeModal;
+
+    document.getElementById("saveBookingDetails").onclick = function () {
+
+        const vehicleType =
+            document.getElementById("bookingVehicleType").value;
+
+        const carType =
+            document.getElementById("bookingCarType").value.trim();
+
+        const carNumber =
+            document.getElementById("bookingCarNumber").value.trim().toUpperCase();
+
+        const hours =
+            Number(document.getElementById("bookingDuration").value) || 1;
+
+        if (!carType) {
+            showToast("Please enter the car type/model.");
+            document.getElementById("bookingCarType").focus();
+            return;
+        }
+
+        if (!carNumber) {
+            showToast("Please enter the car number.");
+            document.getElementById("bookingCarNumber").focus();
+            return;
+        }
+
+        const totalAmount = amount * hours;
+
+        closeModal();
+
+        // Payment opens ONLY after the booking details are saved.
+        openParkSmartPaymentModal(
+            totalAmount,
+            {
+                vehicleType,
+                carType,
+                carNumber,
+                hours,
+                startTime: new Date().toLocaleString(),
+                parkingName: parking.name,
+                parkingId: parking.id,
+                parkingArea: parking.area,
+                parkingCity: parking.city,
+                slotId
+            }
+        );
+    };
+}
+
+
+/* =========================================================
+   PARKSMART PAYMENT MODAL
+========================================================= */
+
+function openParkSmartPaymentModal(amount, details) {
+
+    const modal = document.getElementById("demoModal");
+
+    if (!modal) {
+        completeBookingAfterPayment(details, {
+            method: "Cash",
+            txnId: "PS" + Date.now(),
+            paidAt: Date.now()
+        });
+        return;
+    }
+
+    const box = modal.querySelector(".success-box");
+
+    box.innerHTML = `
+        <div class="parksmart-payment-form">
+            <h2>💳 ParkSmart Payment</h2>
+            <p>${escHtml(details.parkingName)} • Slot ${escHtml(details.slotId)}</p>
+
+            <div class="parksmart-payment-amount">
+                Total Payable: <strong>₹${amount}</strong>
+            </div>
+
+            <div class="parksmart-payment-methods">
+                <button type="button" data-ps-method="UPI" class="selected">📱 UPI</button>
+                <button type="button" data-ps-method="Card">💳 Card</button>
+                <button type="button" data-ps-method="Net Banking">🏦 Net Banking</button>
+                <button type="button" data-ps-method="Cash">💵 Cash</button>
+                <button type="button" data-ps-method="QR Code">▣ QR Code</button>
+            </div>
+
+            <div id="parksmartPaymentFields"></div>
+
+            <p id="parksmartPaymentError" class="log-warn"></p>
+
+            <button type="button" id="parksmartPayNow"
+                    class="confirm-booking">
+                Pay ₹${amount}
+            </button>
+
+            <button type="button" id="parksmartPaymentCancel"
+                    class="pay-ghost">
+                Cancel
+            </button>
+        </div>
+    `;
+
+    modal.classList.add("show");
+    modal.style.display = "flex";
+
+    let selectedMethod = "UPI";
+
+    const fields = document.getElementById("parksmartPaymentFields");
+    const error = document.getElementById("parksmartPaymentError");
+
+    function renderPaymentFields() {
+
+        if (selectedMethod === "UPI") {
+            fields.innerHTML = `
+                <input id="psUpi" class="pay-input"
+                       placeholder="Enter UPI ID (example@upi)">
+            `;
+        } else if (selectedMethod === "Card") {
+            fields.innerHTML = `
+                <input id="psCard" class="pay-input"
+                       maxlength="19"
+                       placeholder="Card number">
+                <div class="pay-row">
+                    <input id="psExpiry" class="pay-input"
+                           maxlength="5" placeholder="MM/YY">
+                    <input id="psCvv" class="pay-input"
+                           maxlength="3" placeholder="CVV">
+                </div>
+            `;
+        } else if (selectedMethod === "Net Banking") {
+            fields.innerHTML = `
+                <select id="psBank" class="pay-input">
+                    <option value="">Select Bank</option>
+                    <option>State Bank of India</option>
+                    <option>HDFC Bank</option>
+                    <option>ICICI Bank</option>
+                    <option>Axis Bank</option>
+                </select>
+            `;
+        } else if (selectedMethod === "QR Code") {
+            fields.innerHTML = `
+                <div class="parksmart-qr-box">
+                    <div class="parksmart-qr">▦</div>
+                    <strong>Scan to Pay</strong>
+                    <small>ParkSmart Demo QR</small>
+                </div>
+            `;
+        } else {
+            fields.innerHTML = `
+                <p class="pay-demo-note">
+                    Cash payment will be recorded for this demo booking.
+                </p>
+            `;
+        }
+    }
+
+    renderPaymentFields();
+
+    modal.querySelectorAll("[data-ps-method]").forEach(button => {
+        button.onclick = function () {
+
+            selectedMethod = this.dataset.psMethod;
+
+            modal.querySelectorAll("[data-ps-method]")
+                .forEach(item => item.classList.remove("selected"));
+
+            this.classList.add("selected");
+
+            error.textContent = "";
+            renderPaymentFields();
+        };
+    });
+
+    document.getElementById("parksmartPaymentCancel").onclick = closeModal;
+
+    document.getElementById("parksmartPayNow").onclick = function () {
+
+        let valid = true;
+
+        if (selectedMethod === "UPI") {
+            const value = document.getElementById("psUpi").value.trim();
+            valid = /^[\w.\-]+@[\w]+$/.test(value);
+        }
+
+        if (selectedMethod === "Card") {
+            const card = document.getElementById("psCard").value.replace(/\s/g, "");
+            const expiry = document.getElementById("psExpiry").value.trim();
+            const cvv = document.getElementById("psCvv").value.trim();
+
+            valid =
+                /^\d{16}$/.test(card) &&
+                /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry) &&
+                /^\d{3}$/.test(cvv);
+        }
+
+        if (selectedMethod === "Net Banking") {
+            valid = Boolean(document.getElementById("psBank").value);
+        }
+
+        if (!valid) {
+            error.textContent = "Please enter valid payment details.";
+            return;
+        }
+
+        this.disabled = true;
+        this.textContent = "Processing...";
+
+        setTimeout(function () {
+
+            const info = {
+                method: selectedMethod,
+                txnId: "PS" + Date.now() +
+                    Math.floor(Math.random() * 1000),
+                paidAt: Date.now()
+            };
+
+            closeModal();
+
+            completeBookingAfterPayment(
+                details,
+                info,
+                amount
+            );
+
+        }, 800);
+    };
+}
+
+
+/* =========================================================
+   COMPLETE BOOKING AFTER PAYMENT
+========================================================= */
+
+function completeBookingAfterPayment(details, payment, amountOverride) {
+
+    const parking = parkingData.find(
+        item => Number(item.id) === Number(details.parkingId)
+    ) || selectedParkingForSlots;
+
+    if (!parking) {
+        showToast("Parking location could not be found.");
+        return;
+    }
+
+    const slots = createParkingSlots(parking);
+
+    const slot = slots.find(
+        item => item.id === details.slotId
+    );
+
+    if (!slot || slot.status !== "vacant") {
+        showToast("This slot is no longer available.");
+        selectedParkingSlot = null;
+        renderParkingSlots();
+        updateSelectedSlotDisplay();
+        return;
+    }
+
+    slot.status = "reserved";
 
     if (parking.available > 0) {
-
         parking.available--;
-
     }
 
-
-    /*
-       Create booking ID.
-    */
+    const amount =
+        Number(amountOverride) ||
+        Number(parking.rate) * Number(details.hours || 1);
 
     const bookingId =
-        "PS" +
-        Math.floor(
-            100000 +
-            Math.random() * 900000
-        );
-
-
-    /*
-       Booking object.
-    */
+        "PS" + Math.floor(100000 + Math.random() * 900000);
 
     const booking = {
-
         id: bookingId,
+        parkingId: parking.id,
+        parkingName: parking.name,
+        parkingArea: parking.area,
+        parkingCity: parking.city,
+        slotId: slot.id,
+        status: "Reserved",
+        createdAt: new Date().toLocaleString(),
 
-        parkingId:
-            parking.id,
+        vehicleType: details.vehicleType || "Car",
+        carType: details.carType || "Car",
+        carNumber: details.carNumber || "",
+        hours: Number(details.hours) || 1,
+        startTime: details.startTime || new Date().toLocaleString(),
 
-        parkingName:
-            parking.name,
-
-        parkingArea:
-            parking.area,
-
-        parkingCity:
-            parking.city,
-
-        slotId:
-            slot.id,
-
-        status:
-            "Reserved",
-
-        createdAt:
-            new Date().toLocaleString()
-
+        payment: {
+            amount: amount,
+            method: payment.method,
+            txnId: payment.txnId,
+            paidAt: payment.paidAt,
+            status: "Paid"
+        }
     };
 
+    const bookings = getBookings();
+    bookings.push(booking);
+    saveBookings(bookings);
 
-    /*
-       Save booking.
-    */
-
-    const bookings =
-        getBookings();
-
-
-    bookings.push(
-        booking
-    );
-
-
-    saveBookings(
-        bookings
-    );
-
-
-    /*
-       Go back to the dashboard.
-    */
-
-    selectedParkingSlot =
-        null;
-
-    selectedParkingForSlots =
-        null;
+    selectedParkingSlot = null;
+    selectedParkingForSlots = null;
 
     updateSelectedSlotDisplay();
-
     showDashboardSection();
-
-
-    /*
-       Update parking list.
-    */
 
     displayDashboardParking(
         getCurrentlyDisplayedParking()
     );
 
-
-    /*
-       Display bookings.
-    */
-
     displayMyBookings();
 
-
-    /*
-       Set success modal ID.
-    */
-
     const bookingIdElement =
-        document.getElementById(
-            "bookingId"
-        );
-
+        document.getElementById("bookingId");
 
     if (bookingIdElement) {
-
-        bookingIdElement.textContent =
-            bookingId;
-
+        bookingIdElement.textContent = bookingId;
     }
 
+    // Payment is now complete. Close every payment/booking overlay so
+    // the process stops here and the user is not left with an active form.
+    closeModal();
 
-    /*
-       Show success modal.
-    */
-
-    const successModal =
-        document.getElementById(
-            "successModal"
-        );
-
-
+    const successModal = document.getElementById("successModal");
     if (successModal) {
-
-        successModal.classList.add(
-            "show"
-        );
-
+        successModal.classList.remove("show");
+        successModal.style.display = "none";
     }
 
+    // Refresh the Payments section so the parking receipt is available there.
+    renderPayments();
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
-
-    showToast(
-        "Parking slot booked successfully!"
+    addNotification(
+        `Payment successful: ₹${amount} via ${payment.method}. Slot ${slot.id} reserved.`
     );
 
+    // Keep the receipt inside Payment Details. Do not open a separate receipt modal.
+
+    showToast(
+        `Parking booked successfully. Payment ₹${amount} received.`
+    );
 }
 
+
+/* =========================================================
+   PARKSMART RECEIPT
+========================================================= */
+
+function showParkSmartReceipt(booking) {
+
+    const modal =
+        document.getElementById("parkSmartReceiptModal");
+
+    if (!modal) {
+        return;
+    }
+
+    const payment = booking.payment || {};
+
+    const set = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
+    };
+
+    set("receiptAmountLarge", `₹${payment.amount || 0}`);
+    set("receiptTxn", payment.txnId || "—");
+    set("receiptDateTime",
+        payment.paidAt
+            ? new Date(payment.paidAt).toLocaleString()
+            : "—"
+    );
+    set("receiptPaymentMethod", payment.method || "—");
+    set("receiptVehicleType", booking.vehicleType || "—");
+    set("receiptCarType", booking.carType || "—");
+    set("receiptCarNumber", booking.carNumber || "—");
+    set("receiptSlot", booking.slotId || "—");
+    set("receiptDuration",
+        `${booking.hours || 1} hour${Number(booking.hours) === 1 ? "" : "s"}`
+    );
+    set("receiptTotalPaid", `₹${payment.amount || 0}`);
+
+    modal.hidden = false;
+    modal.classList.add("show");
+    modal.style.display = "flex";
+}
+
+
+/* =========================================================
+   RECEIPT CLOSE + PRINT
+========================================================= */
+
+const closeParkSmartReceipt =
+    document.getElementById("closeParkSmartReceipt");
+
+if (closeParkSmartReceipt) {
+    closeParkSmartReceipt.addEventListener(
+        "click",
+        function () {
+            const modal =
+                document.getElementById("parkSmartReceiptModal");
+
+            if (modal) {
+                modal.classList.remove("show");
+                modal.style.display = "none";
+                modal.hidden = true;
+            }
+        }
+    );
+}
+
+const printParkSmartReceipt =
+    document.getElementById("printParkSmartReceipt");
+
+if (printParkSmartReceipt) {
+    printParkSmartReceipt.addEventListener(
+        "click",
+        function () {
+            window.print();
+        }
+    );
+}
 
 /* =========================================================
    GET CURRENTLY DISPLAYED PARKING
@@ -3943,10 +4326,50 @@ function payBooking(id, kind) {
 function showReceipt(id, kind) {
     const b = getBookings().find(x => x.id === id);
     if (!b || !b[kind]) return;
+
     const p = b[kind];
-    alert(`RECEIPT (DEMO)\n${b.parkingName}\nSlot: ${b.slotId}\nBooking: ${b.id}\n` +
-        `Type: ${kind === "payment" ? "Reservation fee" : "Extra time"}\nAmount: ₹${p.amount}\n` +
-        `Method: ${p.method}\nTxn: ${p.txnId}\nPaid: ${fmtTime(p.paidAt)}`);
+    const detailsBox = document.getElementById("parkSmartPaymentDetails");
+    if (!detailsBox) return;
+
+    detailsBox.hidden = false;
+    detailsBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    detailsBox.innerHTML = `
+        <div class="parksmart-payment-receipt full-receipt-view">
+            <div class="parksmart-payment-receipt-head">
+                <div>
+                    <span class="parksmart-payment-receipt-label">PARKING RECEIPT</span>
+                    <h3>✓ Payment Successful</h3>
+                    <p>${escHtml(b.parkingName || "ParkSmart")} · Slot ${escHtml(b.slotId || "—")}</p>
+                </div>
+                <strong>₹${Number(p.amount || 0)}</strong>
+            </div>
+
+            <div class="parksmart-payment-receipt-grid">
+                <div><span>Booking ID</span><strong>${escHtml(b.id || "—")}</strong></div>
+                <div><span>Transaction ID</span><strong>${escHtml(p.txnId || "—")}</strong></div>
+                <div><span>Payment Method</span><strong>${escHtml(p.method || "—")}</strong></div>
+                <div><span>Paid On</span><strong>${p.paidAt ? escHtml(new Date(p.paidAt).toLocaleString()) : "—"}</strong></div>
+                <div><span>Parking</span><strong>${escHtml(b.parkingName || "—")}</strong></div>
+                <div><span>Location</span><strong>${escHtml([b.parkingArea, b.parkingCity].filter(Boolean).join(", ") || "—")}</strong></div>
+                <div><span>Vehicle</span><strong>${escHtml(b.vehicleType || "—")}</strong></div>
+                <div><span>Car / Model</span><strong>${escHtml(b.carType || "—")}</strong></div>
+                <div><span>Car Number</span><strong>${escHtml(b.carNumber || "—")}</strong></div>
+                <div><span>Parking Slot</span><strong>${escHtml(b.slotId || "—")}</strong></div>
+                <div><span>Duration</span><strong>${escHtml(`${b.hours || 1} hour${Number(b.hours) === 1 ? "" : "s"}`)}</strong></div>
+                <div><span>Start Time</span><strong>${escHtml(b.startTime || "—")}</strong></div>
+                <div><span>Status</span><strong class="parksmart-receipt-paid">PAID</strong></div>
+            </div>
+
+            <div class="parksmart-inline-receipt-total">
+                <span>Total Paid</span>
+                <strong>₹${Number(p.amount || 0)}</strong>
+            </div>
+
+            <div class="parksmart-payment-receipt-actions">
+                <button type="button" class="secondary" onclick="window.print()">🖨 Print Receipt</button>
+            </div>
+        </div>`;
 }
 
 function renderPayments() {
@@ -3959,7 +4382,7 @@ function renderPayments() {
         if (b.extra) rows.push({ b, p: b.extra, kind: "extra", label: "Extra time" });
     });
 
-    const total = rows.filter(r => r.p.status === "Paid").reduce((t, r) => t + r.p.amount, 0);
+    const total = rows.filter(r => r.p.status === "Paid").reduce((t, r) => t + Number(r.p.amount || 0), 0);
     const totalEl = document.getElementById("totalPaid");
     if (totalEl) totalEl.textContent = `Total paid: ₹${total}`;
 
@@ -3969,14 +4392,21 @@ function renderPayments() {
             const paid = p.status === "Paid";
             return `<tr>
                 <td>${escHtml(b.id)}</td><td>${escHtml(b.parkingName)}</td>
-                <td>${p.hours} hr · ${label}</td><td>₹${p.amount}</td>
+                <td>${p.hours || b.hours || 1} hr · ${label}</td><td>₹${p.amount}</td>
                 <td>${escHtml(p.method) || "—"}</td>
                 <td class="${paid ? "pay-paid" : "pay-pending"}">${p.status}</td>
                 <td>${paid
-                    ? `<button type="button" onclick="showReceipt('${b.id}','${kind}')">Receipt</button>`
-                    : `<button type="button" onclick="payBooking('${b.id}','${kind}')">Pay now</button>`}</td>
+                    ? `<button type="button" onclick="showReceipt('${String(b.id).replace(/'/g, "\\'")}','${kind}')">Receipt</button>`
+                    : `<button type="button" onclick="payBooking('${String(b.id).replace(/'/g, "\\'")}','${kind}')">Pay now</button>`}</td>
             </tr>`;
         }).join("");
+
+    // Payment Details starts empty. Clicking Receipt above fills this same section.
+    const detailsBox = document.getElementById("parkSmartPaymentDetails");
+    if (detailsBox && !detailsBox.classList.contains("full-receipt-view")) {
+        detailsBox.hidden = true;
+        detailsBox.innerHTML = "";
+    }
 }
 
 function refreshSidebarPages() {
@@ -4064,13 +4494,20 @@ let otpTimer = null;
 function openModal(html) {
     const modal = document.getElementById("demoModal");
     modal.querySelector(".success-box").innerHTML = html;
+    modal.hidden = false;
     modal.classList.add("show");
+    modal.style.display = "flex";
     return modal;
 }
 
 function closeModal() {
     clearInterval(otpTimer);
-    document.getElementById("demoModal").classList.remove("show");
+    const modal = document.getElementById("demoModal");
+    if (modal) {
+        modal.classList.remove("show");
+        modal.style.display = "none";
+        modal.hidden = true;
+    }
 }
 
 const PAY_FIELDS = {
@@ -4158,27 +4595,14 @@ function openPaymentModal(amount, title, onSuccess) {
     };
 }
 
-/* Payment is required before a slot is actually booked. */
-const originalBookSlot = bookSelectedParkingSlot;
-bookSelectedParkingSlot = function () {
-
-    if (!selectedParkingSlot || !selectedParkingForSlots) return originalBookSlot();
-
-    const parking = selectedParkingForSlots;
-    const fee = Number(parking.rate) || 0;
-
-    openPaymentModal(fee, `Reservation fee (1 hr), ${parking.name}, slot ${selectedParkingSlot.id}`, info => {
-        const before = getBookings().length;
-        originalBookSlot();
-        const list = getBookings();
-        if (list.length > before) {
-            const nb = list[list.length - 1];
-            updateBooking(nb.id, { payment: Object.assign({ hours: 1, amount: fee, status: "Paid" }, info) });
-            addNotification(`✅ ₹${fee} paid. Slot ${nb.slotId} at ${nb.parkingName} is reserved. Booking ID ${nb.id}.`);
-            refreshSidebarPages();
-        }
-    });
-};
+/*
+   IMPORTANT:
+   Do not open the old Demo Payment modal when the user clicks
+   "Book Selected Slot". The active flow is:
+   Book Selected Slot -> Booking Details -> Save & Continue -> ParkSmart Payment.
+   The older demo-payment wrapper was overriding bookSelectedParkingSlot()
+   and has intentionally been removed.
+*/
 
 
 /* =========================================================
@@ -4296,7 +4720,8 @@ async function geocodeSearch(q) {
         const lat = +data[0].lat, lng = +data[0].lon;
         const ranked = parkingData
             .map(p => ({ p, d: distanceKm(lat, lng, p.lat, p.lng) }))
-            .sort((a, b) => a.d - b.d).slice(0, 5);
+            .filter(item => item.d <= 15)
+            .sort((a, b) => a.d - b.d);
 
         nearbyList = ranked.map(x => x.p);
         displayDashboardParking(nearbyList);
@@ -4310,8 +4735,13 @@ async function geocodeSearch(q) {
         const loc = document.getElementById("selectedLocationText");
         const head = document.getElementById("parkingHeading");
         if (loc) loc.textContent = name;
-        if (head) head.textContent = "Nearest parking";
-        say(`Nearest parking is ${escHtml(ranked[0].p.name)}, ${ranked[0].d.toFixed(1)} km away.`);
+        if (head) head.textContent = ranked.length ? "Parking near this location" : "No parking found";
+
+        if (!ranked.length) {
+            say(`No ParkSmart parking was found within 15 km of ${escHtml(name)}.`);
+        } else {
+            say(`${ranked.length} parking location(s) found near ${escHtml(name)}.`);
+        }
 
     } catch (e) {
         say("Could not search this place. Check your internet connection.");

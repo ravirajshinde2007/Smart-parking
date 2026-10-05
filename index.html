@@ -27,7 +27,7 @@
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     
-          <style src="parking-8k.jpg"></style>
+          
 </head>
 
 
@@ -970,6 +970,7 @@
                         <tbody id="paymentsBody"></tbody>
                     </table>
                 </div>
+                <div id="parkSmartPaymentDetails" class="parksmart-payment-details" hidden></div>
             </section>
         </div>
 
@@ -1043,6 +1044,34 @@
     </section>
     <!-- /#dashboardView -->
 
+
+    <!-- =====================================================
+         PARKSMART PAYMENT RECEIPT MODAL
+    ====================================================== -->
+    <div id="parkSmartReceiptModal" class="parksmart-receipt-modal" hidden>
+        <div class="parksmart-receipt-card">
+            <button type="button" id="closeParkSmartReceipt" class="parksmart-receipt-close">×</button>
+            <div class="parksmart-receipt-success">
+                <div class="parksmart-receipt-check">✓</div>
+                <h2>Payment Successful</h2>
+                <p>ParkSmart Parking</p>
+                <strong id="receiptAmountLarge">₹0</strong>
+            </div>
+            <div class="parksmart-receipt-line"></div>
+            <div class="parksmart-receipt-row"><span>Transaction ID</span><strong id="receiptTxn">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Date &amp; Time</span><strong id="receiptDateTime">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Payment Method</span><strong id="receiptPaymentMethod">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Vehicle Type</span><strong id="receiptVehicleType">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Car Type</span><strong id="receiptCarType">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Car Number</span><strong id="receiptCarNumber">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Parking Slot</span><strong id="receiptSlot">—</strong></div>
+            <div class="parksmart-receipt-row"><span>Duration</span><strong id="receiptDuration">—</strong></div>
+            <div class="parksmart-receipt-line"></div>
+            <div class="parksmart-receipt-total"><span>Total Paid</span><strong id="receiptTotalPaid">₹0</strong></div>
+            <div class="parksmart-receipt-brand"><strong>ParkSmart</strong><span>Smart Parking System</span></div>
+            <button type="button" id="printParkSmartReceipt" class="parksmart-print-receipt">🖨 Print Receipt</button>
+        </div>
+    </div>
 
     <!-- GENERIC MODAL (demo payment + exit OTP) -->
     <div id="demoModal" class="dashboard-modal"><div class="success-box"></div></div>
