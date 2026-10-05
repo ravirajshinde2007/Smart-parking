@@ -1,0 +1,39 @@
+PARKSMART - CLEAN START (WINDOWS)
+
+1. MySQL Workbench
+   - Open Local instance MySQL80.
+   - Run backend/schema.sql.
+   - Run backend/seed.sql.
+
+2. Backend
+   - Open PowerShell in this folder.
+   - cd backend
+   - Copy .env.example to .env
+   - Open .env and set DB_PASSWORD to your MySQL root password.
+   - npm install
+   - npm run check
+   - npm run dev
+
+3. Browser
+   - Open http://localhost:5000
+   - Do NOT open frontend/index.html directly.
+
+4. Authentication
+   - Create Account sends POST /api/auth/register to MySQL.
+   - Login sends POST /api/auth/login and receives a JWT.
+   - The old localStorage login/register handlers have been removed.
+
+5. If authentication fails
+   - Open http://localhost:5000/api/health
+   - It should show {"ok":true,"service":"ParkSmart API"}.
+   - If it says Database unavailable, check DB_PASSWORD and that MySQL80 is running.
+
+
+IMPORTANT AUTH CHECK
+1. Make sure MySQL80 is running in Windows Services or MySQL Workbench.
+2. In backend, copy .env.example to .env and enter your actual MySQL root password in DB_PASSWORD.
+3. Start with: npm run dev
+4. Open http://localhost:5000/api/health. It must show database:true.
+5. If it shows Access denied, fix DB_PASSWORD. If it shows ER_BAD_DB_ERROR, create/use the parksmart database or run backend/schema.sql in MySQL Workbench.
+
+The server now stops with the exact MySQL error instead of silently showing only 'Registration failed' or 'Login failed'.
