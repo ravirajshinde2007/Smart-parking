@@ -37,3 +37,9 @@ IMPORTANT AUTH CHECK
 5. If it shows Access denied, fix DB_PASSWORD. If it shows ER_BAD_DB_ERROR, create/use the parksmart database or run backend/schema.sql in MySQL Workbench.
 
 The server now stops with the exact MySQL error instead of silently showing only 'Registration failed' or 'Login failed'.
+
+
+ADMIN LOGIN
+Admin panel: http://localhost:5000/admin
+Email: admin@gmail.com
+Password: raviraj@2007

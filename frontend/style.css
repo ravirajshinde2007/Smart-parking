@@ -4065,3 +4065,21 @@ button:focus-visible, select:focus-visible, input:focus-visible {
     font-weight: 800;
 }
 .parksmart-inline-receipt-total strong { color: #0284c7; }
+
+
+/* User app: entry/exit is read-only; no camera controls/photos are shown. */
+.log-time-only {
+    min-height: 120px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.log-time-only span {
+    display: block;
+    margin-top: 6px;
+    font-weight: 600;
+}
+.log-time-icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+}

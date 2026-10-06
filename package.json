@@ -1,0 +1,13 @@
+{
+  "name": "parksmart-cloud",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm --prefix backend install",
+    "start": "npm --prefix backend start",
+    "check": "npm --prefix backend run check"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

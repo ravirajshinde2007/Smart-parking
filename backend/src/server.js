@@ -7,6 +7,7 @@ const morgan=require('morgan');
 const path=require('path');
 const fs=require('fs');
 const pool=require('./db');
+const bcrypt=require('bcryptjs');
 
 const app=express();
 const PORT=Number(process.env.PORT||5000);
@@ -28,7 +29,7 @@ app.use(helmet({
     }
   }
 }));
-app.use(cors({origin:clientOrigin,credentials:false}));
+app.use(cors({origin: clientOrigin === '*' ? true : clientOrigin, credentials:false}));
 app.use(express.json({limit:'1mb'}));
 app.use(express.urlencoded({extended:true}));
 app.use(morgan('dev'));
@@ -51,6 +52,9 @@ app.use('/api/bookings',require('./routes/bookings'));
 app.use('/api/access',require('./routes/access'));
 app.use('/api/payments',require('./routes/payments'));
 app.use('/api/notifications',require('./routes/notifications'));
+app.use('/api/admin',require('./routes/admin'));
+
+app.get('/admin', (req,res)=>res.sendFile(path.join(frontend,'admin.html')));
 
 const frontend=path.resolve(__dirname,'../../frontend');
 app.use(express.static(frontend));
@@ -65,11 +69,25 @@ app.use((err,req,res,next)=>{
 });
 
 fs.mkdirSync(path.resolve(process.env.UPLOAD_DIR||'./uploads'),{recursive:true});
+async function ensureAdminAccount(){
+  const email=String(process.env.ADMIN_EMAIL||'admin@gmail.com').trim().toLowerCase();
+  const password=String(process.env.ADMIN_PASSWORD||'raviraj@2007');
+  const passwordHash=await bcrypt.hash(password,12);
+  await pool.query(
+    `INSERT INTO users(first_name,last_name,email,phone,password_hash,role)
+     VALUES(?,?,?,?,?,'ADMIN')
+     ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash), role='ADMIN'`,
+    ['Admin','Administrator',email,'0000000000',passwordHash]
+  );
+  console.log(`Admin account ready: ${email}`);
+}
+
 async function start(){
   try {
     await pool.query('SELECT 1');
+    await ensureAdminAccount();
     console.log('MySQL connection: OK');
-    app.listen(PORT,()=>console.log(`ParkSmart running on http://localhost:${PORT}`));
+    app.listen(PORT,'0.0.0.0',()=>console.log(`ParkSmart running on port ${PORT}`));
   } catch (e) {
     console.error('\nParkSmart could not connect to MySQL.\n');
     console.error('Error:', e.code || e.message);

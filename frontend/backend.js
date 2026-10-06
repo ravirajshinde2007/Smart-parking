@@ -29,7 +29,7 @@
     try {
       res = await fetch(API + path, {...options, headers});
     } catch (e) {
-      throw new Error('Cannot connect to the ParkSmart server. Start the backend with npm run dev and open http://localhost:5000.');
+      throw new Error('Cannot connect to ParkSmart. Please check your internet connection and try again.');
     }
     let data = {};
     try { data = await res.json(); } catch {}
@@ -418,55 +418,9 @@
     const m=$('parkSmartReceiptModal'); if(m){m.hidden=false;m.style.display='grid';m.classList.add('show');}
   };
 
-  // ---------- Camera ----------
-  async function captureCameraPhoto(title){
-    return new Promise(async (resolve,reject)=>{
-      const overlay=document.createElement('div');
-      overlay.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:20px';
-      overlay.innerHTML=`<div style="background:#fff;border-radius:18px;padding:18px;max-width:560px;width:100%;color:#17232d">
-        <h2 style="margin:0 0 10px">${title}</h2>
-        <video autoplay playsinline style="width:100%;border-radius:12px;background:#111"></video>
-        <canvas style="display:none"></canvas>
-        <div style="display:flex;gap:10px;margin-top:12px"><button id="camSnap" class="confirm-booking">📷 Capture Photo</button><button id="camCancel" class="pay-ghost">Cancel</button></div>
-        <p style="font-size:12px;color:#64748b;margin:10px 0 0">Allow camera access. Position the vehicle plate clearly inside the frame.</p>
-      </div>`;
-      document.body.appendChild(overlay);
-      const video=overlay.querySelector('video'),canvas=overlay.querySelector('canvas');
-      let stream;
-      const cleanup=()=>{stream?.getTracks().forEach(t=>t.stop());overlay.remove();};
-      try{
-        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
-        video.srcObject=stream;
-      }catch(e){cleanup();return reject(new Error('Camera access was denied or is unavailable.'));}
-      overlay.querySelector('#camCancel').onclick=()=>{cleanup();resolve(null);};
-      overlay.querySelector('#camSnap').onclick=()=>{
-        canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-        canvas.getContext('2d').drawImage(video,0,0);
-        canvas.toBlob(blob=>{cleanup();resolve(blob);},'image/jpeg',0.88);
-      };
-    });
-  }
-
-  async function accessEvent(code,type){
-    const b=(state.bookings||[]).find(x=>x.id===code);
-    if(!b) return toast('Booking not found.');
-    try{
-      const photo=await captureCameraPhoto(type==='entry'?'🚗 Entry Camera':'🚗 Exit Camera');
-      if(!photo) return;
-      const fd=new FormData(); fd.append('photo',photo,'vehicle.jpg');
-      const result=await api(`/access/${b.serverId}/${type}`,{method:'POST',body:fd});
-      if(result.matched) toast(`${type==='entry'?'Entry':'Exit'} verified. Plate matched.`);
-      await refreshBookings(); await displayMyBookings(); await renderLogs(); await renderPayments();
-    }catch(err){toast(err.message);}
-  }
-
-  window.recordEntry=code=>accessEvent(code,'entry');
-  window.recordExit=code=>accessEvent(code,'exit');
-  window.requestExitOtp=async code=>{
-    // OTP remains an optional safety layer in the UI; actual plate + camera validation is server-side.
-    if(confirm('Continue to exit verification using the camera?')) accessEvent(code,'exit');
-  };
-
+  // ---------- Entry & Exit (user app is read-only) ----------
+  // Entry and exit are recorded by the parking operator/admin.
+  // Users only see the recorded timestamps here; no camera or photo access is requested.
   async function renderLogs(){
     const list=$('logsList'); if(!list) return;
     const bookings=state.bookings||[];
@@ -475,20 +429,10 @@
       let logs=[];
       try{logs=await api(`/access/${b.serverId}/logs`);}catch{}
       const entry=logs.find(x=>x.eventType==='ENTRY'), exit=logs.find(x=>x.eventType==='EXIT');
-      const photo=(x)=>x?.photoId?`<img data-photo-id="${x.photoId}" alt="vehicle photo" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px">`:'<div class="log-photo-empty">📷</div>';
-      const box=(title,x)=>`<div class="log-box">${photo(x)}<strong>${title}</strong>${x?`${new Date(x.time).toLocaleString()}<br>Plate: ${esc(x.plate||'—')} ${x.match===false?'<br><span class="log-warn">⚠ Plate mismatch</span>':''}`:'Not recorded'}</div>`;
-      const action=b.status==='Reserved'?`<button type="button" onclick="recordEntry('${esc(b.id)}')">📷 Record Entry</button>`:b.status==='Parked'?`<button type="button" onclick="recordExit('${esc(b.id)}')">📷 Record Exit</button>`:'';
-      return `<div class="booking-card"><div class="booking-card-header"><div><strong>${esc(b.parkingName)}</strong><small>Slot ${esc(b.slotId)} · ${esc(b.id)}</small></div><span class="booking-status">${esc(b.status)}</span></div><div class="log-grid">${box('Entry',entry)}${box('Exit',exit)}</div><div class="log-actions">${action}</div></div>`;
+      const box=(title,x)=>`<div class="log-box log-time-only"><div class="log-time-icon">${title==='Entry'?'🚗':'🏁'}</div><strong>${title} Time</strong><span>${x?new Date(x.time).toLocaleString():'Not recorded yet'}</span></div>`;
+      return `<div class="booking-card"><div class="booking-card-header"><div><strong>${esc(b.parkingName)}</strong><small>Slot ${esc(b.slotId)} · ${esc(b.id)}</small></div><span class="booking-status">${esc(b.status)}</span></div><div class="log-grid">${box('Entry',entry)}${box('Exit',exit)}</div></div>`;
     }));
     list.innerHTML=chunks.join('');
-    list.querySelectorAll('img[data-photo-id]').forEach(async img=>{
-      try{
-        const res=await fetch(`${API}/access/photo/${img.dataset.photoId}`,{headers:{Authorization:`Bearer ${state.token}`}});
-        if(!res.ok) return;
-        const blob=await res.blob();
-        img.src=URL.createObjectURL(blob);
-      }catch{}
-    });
   }
   window.renderLogs=renderLogs;
 
@@ -516,5 +460,5 @@
   // Auto-restore a valid server session if present.
   if(state.token) setTimeout(bootstrapDashboard,100);
 
-  window.ParkSmartAPI={api,state,bootstrapDashboard,captureCameraPhoto,bookSelectedParkingSlot:()=>window.bookSelectedParkingSlot()};
+  window.ParkSmartAPI={api,state,bootstrapDashboard,bookSelectedParkingSlot:()=>window.bookSelectedParkingSlot()};
 })();
