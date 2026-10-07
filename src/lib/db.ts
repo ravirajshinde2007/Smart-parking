@@ -21,6 +21,7 @@ function createPool(): Pool {
     database,
     waitForConnections: true,
     connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10),
+    connectTimeout: 6000,
     queueLimit: 0,
     timezone: "Z",
     ssl: useSsl ? { rejectUnauthorized: false } : undefined,

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import Script from "next/script";
+import "./original.css";
 
 export const metadata: Metadata = {
-  title: "ParkSmart — Smart Cloud Parking System",
-  description: "Next-Gen AI-Powered Smart Parking with real-time bay visualizer and TiDB Cloud integration",
+  title: "ParkSmart",
+  description: "ParkSmart Smart Parking System",
 };
 
 export default function RootLayout({
@@ -12,9 +13,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        />
+      </head>
+      <body>
         {children}
+        <Script
+          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );
