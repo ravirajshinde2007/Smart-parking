@@ -9,8 +9,9 @@ const {readPlateFromImage}=require('../utils/ocr');
 const {normalizePlate,plateMatches}=require('../utils/plate');
 
 const router=express.Router();
-const uploadRoot=path.resolve(process.env.UPLOAD_DIR||'./uploads');
-fs.mkdirSync(uploadRoot,{recursive:true});
+const defaultUploadDir = process.env.VERCEL ? '/tmp/uploads' : './uploads';
+const uploadRoot = path.resolve(process.env.UPLOAD_DIR || defaultUploadDir);
+try { fs.mkdirSync(uploadRoot, { recursive: true }); } catch (e) { console.warn('Upload directory warning:', e.message); }
 const upload=multer({
   dest:uploadRoot,
   limits:{fileSize:Number(process.env.MAX_UPLOAD_MB||8)*1024*1024},

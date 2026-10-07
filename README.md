@@ -60,7 +60,7 @@ Or paste the two SQL files into MySQL Workbench and execute them.
 
 ## 2. Configure the backend
 
-Open `backend/.env`, copy it to `backend/.env`, then set your MySQL password and JWT secret.
+Open `backend/.env.example`, copy it to `backend/.env`, then set your MySQL password and JWT secret.
 
 Example:
 
@@ -157,3 +157,55 @@ For a production parking gate, replace the demo OCR with a dedicated ALPR/ANPR e
 - Move uploaded photos to S3/Cloud Storage in production rather than local disk.
 - Encrypt sensitive data at rest and apply strict retention/deletion rules for vehicle images.
 - Add rate limiting and account lockout/2FA for operator/admin accounts.
+
+## Admin panel
+
+A separate read-only admin panel is included at:
+
+`http://localhost:5000/admin`
+
+It uses the existing ParkSmart authentication and the existing MySQL data. The customer-facing UI and its existing booking/payment/entry-exit logic are not replaced.
+
+Admin panel features:
+- Dashboard summary
+- Users
+- Parking locations and slot status
+- All bookings
+- All payments
+- Entry/exit and plate-review logs
+- Search/filter tables
+- Refresh data
+
+The admin API is read-only and accepts only `ADMIN` or `OPERATOR` JWT roles. It does not update or delete customer data.
+
+Use an existing account whose `role` is `ADMIN` or `OPERATOR`. Normal `USER` accounts are intentionally rejected from the admin panel.
+
+## Admin login
+
+The admin version automatically creates or updates this dedicated admin account when the backend starts:
+
+```text
+Email: admin@gmail.com
+Password: raviraj@2007
+Role: ADMIN
+```
+
+Open `http://localhost:5000/admin` for the admin panel. The startup provisioning only changes the account with this exact email; existing customer accounts and their data are otherwise preserved.
+
+## Deploying to Vercel
+
+1. Push this repository to GitHub.
+2. In the [Vercel Dashboard](https://vercel.com/), click **Add New...** > **Project** and import this repository.
+3. Keep default settings (Root directory `./`, Framework: Other).
+4. Add the required Environment Variables under **Settings > Environment Variables**:
+   - `DB_HOST`: Host of your cloud MySQL database (e.g. TiDB Cloud, Aiven, Railway, AWS RDS)
+   - `DB_PORT`: `3306` (or provider's port)
+   - `DB_NAME`: `parksmart`
+   - `DB_USER`: Your cloud database user
+   - `DB_PASSWORD`: Your cloud database password
+   - `DB_SSL`: `true` (if your cloud MySQL provider requires SSL)
+   - `JWT_SECRET`: A long secure random string
+   - `ADMIN_EMAIL`: `admin@gmail.com`
+   - `ADMIN_PASSWORD`: `raviraj@2007`
+   - `UPLOAD_DIR`: `/tmp/uploads`
+5. Click **Deploy**. Vercel will host both the frontend and backend serverless API seamlessly using `vercel.json` and `api/index.js`.

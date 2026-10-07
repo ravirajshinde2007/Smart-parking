@@ -29,7 +29,7 @@
     try {
       res = await fetch(API + path, {...options, headers});
     } catch (e) {
-      throw new Error('Cannot connect to ParkSmart. Please check your internet connection and try again.');
+      throw new Error('Cannot connect to the ParkSmart server. Start the backend with npm run dev and open http://localhost:5000.');
     }
     let data = {};
     try { data = await res.json(); } catch {}

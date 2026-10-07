@@ -76,6 +76,32 @@ function showRegister() {
 }
 
 
+// Keep the auth switch functions explicitly available to HTML and other scripts.
+window.showLogin = showLogin;
+window.showRegister = showRegister;
+
+// Also bind the two auth-switch buttons directly so switching works even if
+// inline handlers are blocked by browser/security settings.
+document.addEventListener("DOMContentLoaded", function () {
+    const openRegisterButton = document.getElementById("openRegisterButton");
+    const openLoginButton = document.getElementById("openLoginButton");
+
+    if (openRegisterButton) {
+        openRegisterButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            showRegister();
+        });
+    }
+
+    if (openLoginButton) {
+        openLoginButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            showLogin();
+        });
+    }
+});
+
+
 /* =========================================================
    PASSWORD SHOW / HIDE
 ========================================================= */
@@ -130,258 +156,11 @@ function showToast(message) {
 
 
 /* =========================================================
-   LOGIN
+   LOGIN / REGISTRATION
+   Handled by frontend/backend.js so the Node/Express API is the
+   single source of truth. The old localStorage demo handlers have
+   intentionally been removed.
 ========================================================= */
-
-if (loginForm) {
-
-    loginForm.addEventListener(
-        "submit",
-        function (event) {
-
-            event.preventDefault();
-
-            const email =
-                document
-                    .getElementById("loginEmail")
-                    .value
-                    .trim();
-
-            const password =
-                document
-                    .getElementById("loginPassword")
-                    .value;
-
-            if (email === "") {
-
-                showToast(
-                    "Please enter your email."
-                );
-
-                return;
-            }
-
-            if (password === "") {
-
-                showToast(
-                    "Please enter your password."
-                );
-
-                return;
-            }
-
-            if (password.length < 6) {
-
-                showToast(
-                    "Password must contain at least 6 characters."
-                );
-
-                return;
-            }
-
-            const registeredEmail =
-                localStorage.getItem(
-                    "parkSmartEmail"
-                );
-
-            if (
-                registeredEmail &&
-                registeredEmail !== email
-            ) {
-
-                showToast(
-                    "Please use your registered email."
-                );
-
-                return;
-            }
-
-            localStorage.setItem(
-                "parkSmartLoggedIn",
-                "true"
-            );
-
-            localStorage.setItem(
-                "parkSmartEmail",
-                email
-            );
-
-            showToast(
-                "Login successful! Welcome to ParkSmart."
-            );
-
-            setTimeout(function () {
-
-                showDashboard();
-
-            }, 1000);
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   REGISTRATION
-========================================================= */
-
-if (registerForm) {
-
-    registerForm.addEventListener(
-        "submit",
-        function (event) {
-
-            event.preventDefault();
-
-            const firstName =
-                document
-                    .getElementById("firstName")
-                    .value
-                    .trim();
-
-            const lastName =
-                document
-                    .getElementById("lastName")
-                    .value
-                    .trim();
-
-            const email =
-                document
-                    .getElementById("registerEmail")
-                    .value
-                    .trim();
-
-            const phone =
-                document
-                    .getElementById("phone")
-                    .value
-                    .trim();
-
-            const password =
-                document
-                    .getElementById("registerPassword")
-                    .value;
-
-            const confirmPassword =
-                document
-                    .getElementById("confirmPassword")
-                    .value;
-
-            const terms =
-                document
-                    .getElementById("terms")
-                    .checked;
-
-            if (firstName === "") {
-
-                showToast(
-                    "Enter your first name."
-                );
-
-                return;
-            }
-
-            if (lastName === "") {
-
-                showToast(
-                    "Enter your last name."
-                );
-
-                return;
-            }
-
-            if (email === "") {
-
-                showToast(
-                    "Enter your email address."
-                );
-
-                return;
-            }
-
-            if (phone === "") {
-
-                showToast(
-                    "Enter your mobile number."
-                );
-
-                return;
-            }
-
-            if (password.length < 6) {
-
-                showToast(
-                    "Password must contain at least 6 characters."
-                );
-
-                return;
-            }
-
-            if (password !== confirmPassword) {
-
-                showToast(
-                    "Passwords do not match."
-                );
-
-                return;
-            }
-
-            if (!terms) {
-
-                showToast(
-                    "Please accept the Terms & Conditions."
-                );
-
-                return;
-            }
-
-            localStorage.setItem(
-                "parkSmartFirstName",
-                firstName
-            );
-
-            localStorage.setItem(
-                "parkSmartLastName",
-                lastName
-            );
-
-            localStorage.setItem(
-                "parkSmartEmail",
-                email
-            );
-
-            localStorage.setItem(
-                "parkSmartPhone",
-                phone
-            );
-
-            showToast(
-                "Account created successfully!"
-            );
-
-            setTimeout(function () {
-
-                registerForm.reset();
-
-                showLogin();
-
-                const loginEmail =
-                    document.getElementById(
-                        "loginEmail"
-                    );
-
-                if (loginEmail) {
-                    loginEmail.value = email;
-                }
-
-            }, 1300);
-
-        }
-    );
-
-}
-
 
 /* =========================================================
    FORGOT PASSWORD
@@ -884,35 +663,20 @@ function clearParkingResultsUntilLocationSelected() {
 
 function initializeParkingDashboard() {
 
-    const mapElement =
-        document.getElementById("parkingMap");
+    /*
+       IMPORTANT: Leaflet is initialized only by backend.js.
+       The old frontend copy used to initialize the same #parkingMap
+       a second time, which caused Leaflet to throw:
+       "Map container is already initialized".
 
-    if (!mapElement) {
-        return;
+       Keep this function as a compatibility wrapper because the
+       existing UI calls it, but never create another Leaflet map here.
+    */
+    const apiState = window.ParkSmartAPI?.state;
+
+    if (apiState?.map) {
+        setTimeout(() => apiState.map.invalidateSize(), 50);
     }
-
-    if (parkingMap) {
-        return;
-    }
-
-    parkingMap =
-        L.map("parkingMap").setView(
-            [22.9734, 78.6569],
-            5
-        );
-
-    L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            attribution:
-                "&copy; OpenStreetMap contributors"
-        }
-    ).addTo(parkingMap);
-
-    // Keep the dashboard empty until the user selects a location.
-    clearParkingResultsUntilLocationSelected();
-
-    displayMyBookings();
 
 }
 
@@ -2720,6 +2484,12 @@ function updateSelectedSlotUI() {
 
 function bookSelectedParkingSlot() {
 
+    // Backend mode owns the real slot selection and booking flow.
+    // Delegate instead of using the old localStorage-only state.
+    if (window.ParkSmartAPI?.state && typeof window.ParkSmartAPI.bookSelectedParkingSlot === "function") {
+        return window.ParkSmartAPI.bookSelectedParkingSlot();
+    }
+
     if (!selectedParkingSlot || !selectedParkingForSlots) {
         showToast("Please select a vacant parking slot first.");
         return;
@@ -3949,117 +3719,8 @@ document.addEventListener(
 
 /* =========================================================
    LOGOUT
+   Handled by frontend/backend.js so the server session is cleared.
 ========================================================= */
-
-const logoutButton =
-    document.getElementById(
-        "logoutButton"
-    );
-
-
-if (logoutButton) {
-
-    logoutButton.addEventListener(
-        "click",
-        function () {
-
-            const logout =
-                confirm(
-                    "Do you want to logout?"
-                );
-
-
-            if (!logout) {
-                return;
-            }
-
-
-            localStorage.setItem(
-                "parkSmartLoggedIn",
-                "false"
-            );
-
-
-            if (dashboardView) {
-
-                dashboardView.classList.add(
-                    "hidden"
-                );
-
-                dashboardView.style.display =
-                    "none";
-
-            }
-
-
-            const authPage =
-                document.getElementById(
-                    "authPage"
-                );
-
-
-            if (authPage) {
-
-                authPage.style.display =
-                    "flex";
-
-            }
-
-
-            showLogin();
-
-
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-
-
-            showToast(
-                "You have been logged out."
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   CHECK EXISTING LOGIN
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        const loggedIn =
-            localStorage.getItem(
-                "parkSmartLoggedIn"
-            );
-
-
-        /*
-           We don't automatically show dashboard
-           here so that the login screen remains
-           visible after refreshing unless the user
-           has explicitly logged in during the session.
-        */
-
-        if (loggedIn === "true") {
-
-            /*
-               Uncomment the next line if you want
-               automatic login after page refresh.
-
-               showDashboard();
-            */
-
-        }
-
-    }
-);
-
 
 /* =========================================================
    SIDEBAR: PAGES, RESERVATIONS, PAYMENTS, ENTRY & EXIT
@@ -4119,61 +3780,9 @@ showDashboard = function () {
 if (doneButton) doneButton.addEventListener("click", () => showPage("reservations"));
 
 
-/* ---------- Photo storage (IndexedDB, not localStorage) ---------- */
-
-const photoDB = new Promise((resolve, reject) => {
-    const req = indexedDB.open("parkSmartPhotos", 1);
-    req.onupgradeneeded = () => req.result.createObjectStore("photos");
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-});
-
-async function savePhoto(id, dataUrl) {
-    const db = await photoDB;
-    return new Promise((res, rej) => {
-        const tx = db.transaction("photos", "readwrite");
-        tx.objectStore("photos").put(dataUrl, id);
-        tx.oncomplete = res;
-        tx.onerror = () => rej(tx.error);
-    });
-}
-
-async function getPhoto(id) {
-    const db = await photoDB;
-    return new Promise(res => {
-        const req = db.transaction("photos").objectStore("photos").get(id);
-        req.onsuccess = () => res(req.result || "");
-        req.onerror = () => res("");
-    });
-}
-
-/* Opens the camera (phones) or file picker (desktop); returns a resized JPEG. */
-function pickPhoto() {
-    return new Promise(resolve => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.capture = "environment";
-        input.addEventListener("cancel", () => resolve(null));
-        input.addEventListener("change", () => {
-            const file = input.files[0];
-            if (!file) return resolve(null);
-            const img = new Image();
-            img.onload = () => {
-                const scale = Math.min(1, 800 / img.width);
-                const canvas = document.createElement("canvas");
-                canvas.width = img.width * scale;
-                canvas.height = img.height * scale;
-                canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL("image/jpeg", 0.7));
-            };
-            img.onerror = () => resolve(null);
-            img.src = URL.createObjectURL(file);
-        });
-        input.click();
-    });
-}
-
+/* ---------- Entry & Exit display ---------- */
+// Users do not get camera access for entry/exit. The operator/admin records
+// the events; the user app only displays the recorded entry/exit times.
 
 /* ---------- Booking helpers ---------- */
 
@@ -4213,56 +3822,7 @@ function decorateReservations() {
 }
 
 
-/* ---------- Entry & Exit ---------- */
-
-async function recordEntry(id) {
-    const plate = (prompt("Vehicle plate number at entry:") || "").trim().toUpperCase();
-    if (!plate) return showToast("Plate number is required.");
-
-    const photo = await pickPhoto();
-    if (!photo) return showToast("Entry photo is required.");
-
-    const photoId = "entry-" + id;
-    await savePhoto(photoId, photo);
-    updateBooking(id, { status: "Parked", entry: { time: Date.now(), plate, photoId } });
-    const bk = getBookings().find(b => b.id === id);
-    addNotification(`🚗 Entry confirmed: ${plate} parked at ${bk.parkingName}, slot ${bk.slotId}, ${fmtTime(Date.now())}.`);
-    refreshSidebarPages();
-}
-
-async function recordExit(id) {
-    const booking = getBookings().find(b => b.id === id);
-    if (!booking || !booking.entry) return;
-
-    const plate = (prompt("Vehicle plate number at exit:") || "").trim().toUpperCase();
-    if (!plate) return showToast("Plate number is required.");
-
-    const photo = await pickPhoto();
-    if (!photo) return showToast("Exit photo is required.");
-
-    const match = plate === booking.entry.plate;
-    if (!match && !confirm("Plate does not match the entry plate. Continue anyway?")) return;
-
-    const photoId = "exit-" + id;
-    await savePhoto(photoId, photo);
-
-    const exitTime = Date.now();
-    const hours = Math.max(1, Math.ceil((exitTime - booking.entry.time) / 3600000));
-    const prepaid = booking.payment ? booking.payment.amount : 0;
-    const extraAmt = Math.max(0, hours * rateFor(booking) - prepaid);
-
-    updateBooking(id, {
-        status: "Completed",
-        exit: { time: exitTime, plate, photoId, match },
-        extra: extraAmt > 0
-            ? { hours, amount: extraAmt, status: "Pending", method: "", txnId: "", paidAt: null }
-            : null
-    });
-    addNotification(`🏁 Exit completed (${hours} hr). ` +
-        (extraAmt > 0 ? `Extra ₹${extraAmt} is due in Payments.` : "No extra payment due. Thank you!") +
-        (match ? "" : " ⚠ Plate mismatch was flagged."));
-    refreshSidebarPages();
-}
+/* ---------- Entry & Exit (read-only for users) ---------- */
 
 function renderLogs() {
     const list = document.getElementById("logsList");
@@ -4274,42 +3834,30 @@ function renderLogs() {
         return;
     }
 
-    list.innerHTML = bookings.map(b => {
-        const box = (title, data, prefix) => `
-            <div class="log-box">
-                ${data ? `<img alt="${title} photo" data-photo="${data.photoId}">`
-                       : '<div class="log-photo-empty">📷</div>'}
-                <strong>${title}</strong>
-                ${data ? `${fmtTime(data.time)}<br>Plate: ${escHtml(data.plate)}
-                          ${prefix === "exit" && data.match === false ? '<br><span class="log-warn">⚠ Plate mismatch</span>' : ""}`
-                       : "Not recorded"}
-            </div>`;
-
-        const action = b.status === "Reserved"
-            ? `<button type="button" onclick="recordEntry('${b.id}')">📷 Record Entry</button>`
-            : b.status === "Parked"
-                ? `<button type="button" onclick="requestExitOtp('${b.id}')">🔐 Exit with OTP</button>`
-                : "";
-
-        return `
-            <div class="booking-card">
-                <div class="booking-card-header">
-                    <div>
-                        <strong>${escHtml(b.parkingName)}</strong>
-                        <small>Slot ${escHtml(b.slotId)} · ${escHtml(b.id)}</small>
-                    </div>
-                    <span class="booking-status">${escHtml(b.status)}</span>
+    const timeText = value => value ? fmtTime(value) : "Not recorded yet";
+    list.innerHTML = bookings.map(b => `
+        <div class="booking-card">
+            <div class="booking-card-header">
+                <div>
+                    <strong>${escHtml(b.parkingName || "Parking")}</strong>
+                    <small>Slot ${escHtml(b.slotId || "—")} · ${escHtml(b.id || "—")}</small>
                 </div>
-                <div class="log-grid">${box("Entry", b.entry, "entry")}${box("Exit", b.exit, "exit")}</div>
-                <div class="log-actions">${action}</div>
-            </div>`;
-    }).join("");
-
-    list.querySelectorAll("img[data-photo]").forEach(img =>
-        getPhoto(img.dataset.photo).then(src => { if (src) img.src = src; })
-    );
+                <span class="booking-status">${escHtml(b.status || "Reserved")}</span>
+            </div>
+            <div class="log-grid">
+                <div class="log-box log-time-only">
+                    <div class="log-time-icon">🚗</div>
+                    <strong>Entry Time</strong>
+                    <span>${timeText(b.entry && b.entry.time)}</span>
+                </div>
+                <div class="log-box log-time-only">
+                    <div class="log-time-icon">🏁</div>
+                    <strong>Exit Time</strong>
+                    <span>${timeText(b.exit && b.exit.time)}</span>
+                </div>
+            </div>
+        </div>`).join("");
 }
-
 
 /* ---------- Payments ---------- */
 

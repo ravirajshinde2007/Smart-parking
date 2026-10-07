@@ -8,9 +8,10 @@ const config = {
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'parksmart',
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10),
   queueLimit: 0,
-  timezone: 'Z'
+  timezone: 'Z',
+  ...(process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: false } } : {})
 };
 
 const pool = mysql.createPool(config);

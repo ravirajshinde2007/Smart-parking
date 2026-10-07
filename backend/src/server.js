@@ -11,7 +11,9 @@ const bcrypt=require('bcryptjs');
 
 const app=express();
 const PORT=Number(process.env.PORT||5000);
-const clientOrigin=process.env.CLIENT_ORIGIN||`http://localhost:${PORT}`;
+const corsOrigin = process.env.CLIENT_ORIGIN
+  ? (process.env.CLIENT_ORIGIN === '*' ? true : process.env.CLIENT_ORIGIN)
+  : true;
 
 app.use(helmet({
   crossOriginResourcePolicy:{policy:'cross-origin'},
@@ -29,7 +31,7 @@ app.use(helmet({
     }
   }
 }));
-app.use(cors({origin: clientOrigin === '*' ? true : clientOrigin, credentials:false}));
+app.use(cors({origin:corsOrigin,credentials:false}));
 app.use(express.json({limit:'1mb'}));
 app.use(express.urlencoded({extended:true}));
 app.use(morgan('dev'));
@@ -68,7 +70,15 @@ app.use((err,req,res,next)=>{
   res.status(err.status||500).json({message:err.message||'Server error'});
 });
 
-fs.mkdirSync(path.resolve(process.env.UPLOAD_DIR||'./uploads'),{recursive:true});
+const defaultUploadDir = process.env.VERCEL ? '/tmp/uploads' : path.resolve(__dirname, '../uploads');
+const uploadDir = process.env.UPLOAD_DIR || defaultUploadDir;
+try {
+  fs.mkdirSync(path.resolve(uploadDir), { recursive: true });
+} catch (e) {
+  console.warn('Upload directory warning:', e.message);
+}
+
+let adminAccountEnsured = false;
 async function ensureAdminAccount(){
   const email=String(process.env.ADMIN_EMAIL||'admin@gmail.com').trim().toLowerCase();
   const password=String(process.env.ADMIN_PASSWORD||'raviraj@2007');
@@ -82,12 +92,30 @@ async function ensureAdminAccount(){
   console.log(`Admin account ready: ${email}`);
 }
 
+async function ensureAdminAccountSafely(){
+  if (adminAccountEnsured) return;
+  try {
+    await ensureAdminAccount();
+    adminAccountEnsured = true;
+  } catch (err) {
+    console.warn('Admin account initialization deferred:', err.code || err.message);
+  }
+}
+
+app.use('/api', (req, res, next) => {
+  if (!adminAccountEnsured) {
+    ensureAdminAccountSafely().catch(() => {});
+  }
+  next();
+});
+
 async function start(){
   try {
     await pool.query('SELECT 1');
     await ensureAdminAccount();
+    adminAccountEnsured = true;
     console.log('MySQL connection: OK');
-    app.listen(PORT,'0.0.0.0',()=>console.log(`ParkSmart running on port ${PORT}`));
+    app.listen(PORT,()=>console.log(`ParkSmart running on http://localhost:${PORT}`));
   } catch (e) {
     console.error('\nParkSmart could not connect to MySQL.\n');
     console.error('Error:', e.code || e.message);
@@ -96,4 +124,8 @@ async function start(){
   }
 }
 
-start();
+module.exports = app;
+
+if (require.main === module) {
+  start();
+}

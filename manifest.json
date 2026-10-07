@@ -1,0 +1,14 @@
+{
+  "name": "ParkSmart Smart Parking",
+  "short_name": "ParkSmart",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f8fb",
+  "theme_color": "#1769aa",
+  "description": "Find, reserve and manage parking from any mobile or web browser.",
+  "icons": [
+    {"src":"/icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"/icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
