@@ -56,3 +56,21 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const auth = getAuthUser(req);
+    if (!auth) {
+      return NextResponse.json({ message: "Authentication required" }, { status: 401 });
+    }
+
+    await pool.query("DELETE FROM notifications WHERE user_id = ?", [auth.id]);
+    return NextResponse.json({ success: true, message: "Notifications cleared" });
+  } catch (error: any) {
+    console.error("Delete notifications error:", error);
+    return NextResponse.json(
+      { message: error.message || "Failed to clear notifications" },
+      { status: 500 }
+    );
+  }
+}

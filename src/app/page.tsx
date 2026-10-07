@@ -18,6 +18,28 @@ export default function OriginalParkSmartApp() {
   const [isSlotsOpen, setIsSlotsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  // Profile Modal State
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+
+  // Settings Modal State
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"pref" | "sec">("pref");
+  const [settingBrowserNotif, setSettingBrowserNotif] = useState(false);
+  const [settingBookingAlerts, setSettingBookingAlerts] = useState(true);
+  const [settingSoundEffects, setSettingSoundEffects] = useState(true);
+  const [settingVehicleNumber, setSettingVehicleNumber] = useState("");
+  const [settingVehicleType, setSettingVehicleType] = useState("Car");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  // Notifications State
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
   // Auth Form State
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -71,7 +93,7 @@ export default function OriginalParkSmartApp() {
     setTimeout(() => setToastVisible(false), 3500);
   };
 
-  // Restore Session
+  // Restore Session & Preferences
   useEffect(() => {
     try {
       const savedToken = localStorage.getItem("parksmart_token") || sessionStorage.getItem("parksmart_token");
@@ -79,6 +101,21 @@ export default function OriginalParkSmartApp() {
       if (savedToken && savedUser) {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
+      }
+      const savedSettings = localStorage.getItem("parksmart_settings");
+      if (savedSettings) {
+        const s = JSON.parse(savedSettings);
+        if (s.browserNotif !== undefined) setSettingBrowserNotif(s.browserNotif);
+        if (s.bookingAlerts !== undefined) setSettingBookingAlerts(s.bookingAlerts);
+        if (s.soundEffects !== undefined) setSettingSoundEffects(s.soundEffects);
+        if (s.vehicleNumber) {
+          setSettingVehicleNumber(s.vehicleNumber);
+          setBookingCarNumber(s.vehicleNumber);
+        }
+        if (s.vehicleType) {
+          setSettingVehicleType(s.vehicleType);
+          setBookingVehicleType(s.vehicleType);
+        }
       }
     } catch (e) {}
   }, []);
@@ -106,18 +143,23 @@ export default function OriginalParkSmartApp() {
     loadParkingLots();
   }, []);
 
-  // Fetch Bookings, Payments, Logs when token changes
+  // Fetch Bookings, Payments, Logs, Notifications when token changes
   const loadUserData = async () => {
     if (!token) return;
     try {
-      const [bRes, pRes, lRes] = await Promise.all([
+      const [bRes, pRes, lRes, nRes] = await Promise.all([
         fetch("/api/bookings", { headers: { Authorization: `Bearer ${token}` } }),
         fetch("/api/payments", { headers: { Authorization: `Bearer ${token}` } }),
         fetch("/api/access/logs", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("/api/notifications", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (bRes.ok) setBookings(await bRes.json());
       if (pRes.ok) setPayments(await pRes.json());
       if (lRes.ok) setAccessLogs(await lRes.json());
+      if (nRes.ok) {
+        const notifs = await nRes.json();
+        setNotifications(Array.isArray(notifs) ? notifs : []);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -126,6 +168,117 @@ export default function OriginalParkSmartApp() {
   useEffect(() => {
     if (token) loadUserData();
   }, [token]);
+
+  const handleMarkNotificationsRead = async () => {
+    if (!token) return;
+    try {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true, is_read: 1 })));
+    } catch (e) {}
+  };
+
+  const handleClearNotifications = async () => {
+    if (!token) return;
+    try {
+      await fetch("/api/notifications", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications([]);
+      showToast("Notifications cleared.");
+    } catch (e) {}
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFirstName.trim() || !editLastName.trim() || !editPhone.trim()) {
+      showToast("Please fill in all profile fields.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: editFirstName.trim(),
+          lastName: editLastName.trim(),
+          phone: editPhone.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update profile");
+
+      const updatedUser = { ...user, ...data.user };
+      setUser(updatedUser);
+      localStorage.setItem("parksmart_user", JSON.stringify(updatedUser));
+      setIsProfileModalOpen(false);
+      showToast("Profile updated successfully!");
+    } catch (err: any) {
+      showToast(err.message || "Failed to update profile");
+    }
+  };
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    const settings = {
+      browserNotif: settingBrowserNotif,
+      bookingAlerts: settingBookingAlerts,
+      soundEffects: settingSoundEffects,
+      vehicleNumber: settingVehicleNumber.trim().toUpperCase(),
+      vehicleType: settingVehicleType,
+    };
+    localStorage.setItem("parksmart_settings", JSON.stringify(settings));
+    if (settingVehicleNumber) setBookingCarNumber(settingVehicleNumber.trim().toUpperCase());
+    if (settingVehicleType) setBookingVehicleType(settingVehicleType);
+    setIsSettingsModalOpen(false);
+    showToast("Preferences saved successfully!");
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword) {
+      showToast("Please enter current and new password.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast("New password must contain at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      showToast("New passwords do not match.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to change password");
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setIsSettingsModalOpen(false);
+      showToast("Password updated successfully!");
+    } catch (err: any) {
+      showToast(err.message || "Failed to change password");
+    }
+  };
 
   // Leaflet Map Initialization
   useEffect(() => {
@@ -730,10 +883,55 @@ export default function OriginalParkSmartApp() {
                 <p>Find available parking near your destination.</p>
               </div>
 
-              <div className="dashboard-header-actions">
-                <button type="button" className="dashboard-notification">
+              <div className="dashboard-header-actions" style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  className="dashboard-notification"
+                  onClick={() => {
+                    const next = !isNotifOpen;
+                    setIsNotifOpen(next);
+                    if (next) handleMarkNotificationsRead();
+                  }}
+                  title="Notifications"
+                >
                   🔔
+                  {notifications.some((n) => !n.isRead && !n.is_read) && (
+                    <span style={{ display: "block" }}></span>
+                  )}
                 </button>
+
+                {isNotifOpen && (
+                  <div className="notif-panel show" style={{ display: "block" }}>
+                    <div className="notif-head">
+                      <strong>Notifications</strong>
+                      <button type="button" onClick={handleClearNotifications}>
+                        Clear
+                      </button>
+                    </div>
+                    {notifications.length > 0 ? (
+                      notifications.map((n, idx) => (
+                        <div
+                          key={n.id || idx}
+                          className={`notif-item ${!n.isRead && !n.is_read ? "unread" : ""}`}
+                        >
+                          <strong>{n.title || "Notification"}</strong>
+                          <p style={{ margin: "4px 0 2px", fontSize: "12px", color: "#cbd5e1" }}>
+                            {n.message}
+                          </p>
+                          <small style={{ color: "#64748b", fontSize: "10px" }}>
+                            {n.createdAt || n.created_at
+                              ? new Date(n.createdAt || n.created_at).toLocaleString()
+                              : "Recent"}
+                          </small>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="notif-item" style={{ textAlign: "center", padding: "16px 10px", color: "#64748b" }}>
+                        No notifications yet
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="dashboard-profile">
                   <button
@@ -763,6 +961,27 @@ export default function OriginalParkSmartApp() {
                         </div>
                       </div>
                       <div className="profile-divider"></div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          setEditFirstName(user.firstName || "");
+                          setEditLastName(user.lastName || "");
+                          setEditPhone(user.phone || "");
+                          setIsProfileModalOpen(true);
+                        }}
+                      >
+                        👤 My Profile
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          setIsSettingsModalOpen(true);
+                        }}
+                      >
+                        ⚙️ Settings
+                      </button>
                       <button type="button" onClick={handleLogout} className="logout-button">
                         🚪 Logout
                       </button>
@@ -1334,6 +1553,450 @@ export default function OriginalParkSmartApp() {
             >
               🖨 Print Receipt
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+           PROFILE MODAL
+      ====================================================== */}
+      {isProfileModalOpen && user && (
+        <div id="profileModal" className="dashboard-modal show" style={{ display: "flex" }}>
+          <div className="booking-box" style={{ maxWidth: "500px" }}>
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setIsProfileModalOpen(false)}
+            >
+              &times;
+            </button>
+            <div className="booking-title" style={{ marginBottom: "20px" }}>
+              <div className="booking-icon" style={{ background: "rgba(0, 217, 166, 0.15)", color: "#00d9a6" }}>
+                👤
+              </div>
+              <div>
+                <h2>My Profile</h2>
+                <p style={{ color: "#94a3b8", fontSize: "13px" }}>Manage your ParkSmart personal details</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  padding: "14px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "14px",
+                }}
+              >
+                <div
+                  className="large-profile-avatar"
+                  style={{
+                    width: "54px",
+                    height: "54px",
+                    fontSize: "22px",
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    background: "linear-gradient(135deg, #00d9a6, #00a8ff)",
+                    color: "#02151a",
+                    fontWeight: 800,
+                  }}
+                >
+                  {(user.firstName || "D").charAt(0).toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: "16px", color: "#fff" }}>
+                    {user.firstName} {user.lastName}
+                  </div>
+                  <div
+                    style={{
+                      display: "inline-block",
+                      fontSize: "11px",
+                      padding: "2px 8px",
+                      borderRadius: "20px",
+                      background: "rgba(0, 217, 166, 0.15)",
+                      color: "#00d9a6",
+                      border: "1px solid rgba(0, 217, 166, 0.3)",
+                      marginTop: "4px",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {user.role || "DRIVER"}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>First Name</label>
+                  <input
+                    type="text"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    className="pay-input"
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Last Name</label>
+                  <input
+                    type="text"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    className="pay-input"
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Email Address (Account ID)</label>
+                <input
+                  type="email"
+                  value={user.email}
+                  disabled
+                  className="pay-input"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: "10px",
+                    color: "#64748b",
+                    fontSize: "14px",
+                    cursor: "not-allowed",
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Phone Number</label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="pay-input"
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "10px",
+                    color: "#fff",
+                    fontSize: "14px",
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(false)}
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "#94a3b8",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="confirm-booking"
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: "10px",
+                    background: "linear-gradient(135deg, #00d9a6, #00a8ff)",
+                    color: "#02151a",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+           SETTINGS MODAL
+      ====================================================== */}
+      {isSettingsModalOpen && (
+        <div id="settingsModal" className="dashboard-modal show" style={{ display: "flex" }}>
+          <div className="booking-box" style={{ maxWidth: "520px", maxHeight: "90vh", overflowY: "auto" }}>
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setIsSettingsModalOpen(false)}
+            >
+              &times;
+            </button>
+            <div className="booking-title" style={{ marginBottom: "20px" }}>
+              <div className="booking-icon" style={{ background: "rgba(0, 168, 255, 0.15)", color: "#00a8ff" }}>
+                ⚙️
+              </div>
+              <div>
+                <h2>Settings &amp; Preferences</h2>
+                <p style={{ color: "#94a3b8", fontSize: "13px" }}>Customize your ParkSmart experience</p>
+              </div>
+            </div>
+
+            {/* Tab Buttons */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "18px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "10px" }}>
+              <button
+                type="button"
+                className={`settings-tab-btn ${settingsTab === "pref" ? "active" : ""}`}
+                onClick={() => setSettingsTab("pref")}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: "8px",
+                  background: settingsTab === "pref" ? "rgba(0, 217, 166, 0.2)" : "rgba(255,255,255,0.05)",
+                  color: settingsTab === "pref" ? "#00d9a6" : "#94a3b8",
+                  border: settingsTab === "pref" ? "1px solid rgba(0, 217, 166, 0.3)" : "1px solid rgba(255,255,255,0.08)",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Preferences
+              </button>
+              <button
+                type="button"
+                className={`settings-tab-btn ${settingsTab === "sec" ? "active" : ""}`}
+                onClick={() => setSettingsTab("sec")}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: "8px",
+                  background: settingsTab === "sec" ? "rgba(0, 217, 166, 0.2)" : "rgba(255,255,255,0.05)",
+                  color: settingsTab === "sec" ? "#00d9a6" : "#94a3b8",
+                  border: settingsTab === "sec" ? "1px solid rgba(0, 217, 166, 0.3)" : "1px solid rgba(255,255,255,0.08)",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Security &amp; Password
+              </button>
+            </div>
+
+            {/* TAB 1: Preferences */}
+            {settingsTab === "pref" && (
+              <form onSubmit={handleSaveSettings} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <strong style={{ fontSize: "13px", color: "#cbd5e1", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Notifications
+                  </strong>
+                  <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+                    <span style={{ fontSize: "13px", color: "#fff" }}>Browser Push Notifications</span>
+                    <input
+                      type="checkbox"
+                      checked={settingBrowserNotif}
+                      onChange={(e) => {
+                        setSettingBrowserNotif(e.target.checked);
+                        if (e.target.checked && typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+                          Notification.requestPermission();
+                        }
+                      }}
+                      style={{ accentColor: "#00d9a6", width: "18px", height: "18px", cursor: "pointer" }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+                    <span style={{ fontSize: "13px", color: "#fff" }}>Booking Confirmations &amp; Alerts</span>
+                    <input
+                      type="checkbox"
+                      checked={settingBookingAlerts}
+                      onChange={(e) => setSettingBookingAlerts(e.target.checked)}
+                      style={{ accentColor: "#00d9a6", width: "18px", height: "18px", cursor: "pointer" }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+                    <span style={{ fontSize: "13px", color: "#fff" }}>Sound Effects</span>
+                    <input
+                      type="checkbox"
+                      checked={settingSoundEffects}
+                      onChange={(e) => setSettingSoundEffects(e.target.checked)}
+                      style={{ accentColor: "#00d9a6", width: "18px", height: "18px", cursor: "pointer" }}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <strong style={{ fontSize: "13px", color: "#cbd5e1", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Default Vehicle
+                  </strong>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", color: "#94a3b8" }}>Default Vehicle Number</label>
+                    <input
+                      type="text"
+                      value={settingVehicleNumber}
+                      onChange={(e) => setSettingVehicleNumber(e.target.value.toUpperCase())}
+                      placeholder="e.g. MH12AB1234"
+                      className="pay-input"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "10px",
+                        color: "#fff",
+                        fontSize: "14px",
+                        textTransform: "uppercase",
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", color: "#94a3b8" }}>Default Vehicle Type</label>
+                    <select
+                      value={settingVehicleType}
+                      onChange={(e) => setSettingVehicleType(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        background: "#0c1d2e",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "10px",
+                        color: "#fff",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <option value="Car">Car</option>
+                      <option value="Bike">Bike</option>
+                      <option value="EV">Electric Vehicle (EV)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "6px" }}>
+                  <button
+                    type="submit"
+                    className="confirm-booking"
+                    style={{
+                      padding: "10px 22px",
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, #00d9a6, #00a8ff)",
+                      color: "#02151a",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Save Preferences
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 2: Security & Password */}
+            {settingsTab === "sec" && (
+              <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Current Password</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    required
+                    className="pay-input"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>New Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    required
+                    className="pay-input"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    required
+                    className="pay-input"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      fontSize: "14px",
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                  <button
+                    type="submit"
+                    className="confirm-booking"
+                    style={{
+                      padding: "10px 22px",
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, #00d9a6, #00a8ff)",
+                      color: "#02151a",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Change Password
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

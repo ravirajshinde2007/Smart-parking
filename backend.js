@@ -438,6 +438,308 @@
 
   window.initializeParkingDashboard=initMap;
 
+  // =========================================================
+  // PROFILE, NOTIFICATIONS & SETTINGS MODULE
+  // =========================================================
+  const SETTINGS_KEY = 'parksmart_settings';
+  const NOTIF_KEY = 'parkSmartNotifs';
+
+  function getSavedSettings() {
+    try {
+      return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {
+        browserNotif: false,
+        bookingAlerts: true,
+        soundEffects: true,
+        vehicleNumber: '',
+        vehicleType: 'Car'
+      };
+    } catch {
+      return {
+        browserNotif: false,
+        bookingAlerts: true,
+        soundEffects: true,
+        vehicleNumber: '',
+        vehicleType: 'Car'
+      };
+    }
+  }
+
+  // --- Profile Modal ---
+  function openProfileModal() {
+    const modal = $('profileModal');
+    if (!modal) return;
+    const dropdown = $('profileDropdown');
+    if (dropdown) dropdown.classList.remove('show');
+
+    const u = state.user || {};
+    if ($('profileFirstName')) $('profileFirstName').value = u.firstName || '';
+    if ($('profileLastName')) $('profileLastName').value = u.lastName || '';
+    if ($('profileEmail')) $('profileEmail').value = u.email || '';
+    if ($('profilePhone')) $('profilePhone').value = u.phone || '';
+    if ($('profileModalName')) $('profileModalName').textContent = `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Driver';
+    if ($('profileModalRoleBadge')) $('profileModalRoleBadge').textContent = (u.role || 'DRIVER').toUpperCase();
+    if ($('profileModalAvatar')) $('profileModalAvatar').textContent = (u.firstName || 'D').charAt(0).toUpperCase();
+
+    modal.hidden = false;
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+  }
+
+  function closeProfileModal() {
+    const modal = $('profileModal');
+    if (modal) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      modal.hidden = true;
+    }
+  }
+
+  async function handleProfileSubmit(e) {
+    e.preventDefault();
+    const firstName = $('profileFirstName')?.value.trim();
+    const lastName = $('profileLastName')?.value.trim();
+    const phone = $('profilePhone')?.value.trim();
+
+    if (!firstName || !lastName || !phone) {
+      return toast('First name, last name, and phone number are required.');
+    }
+
+    try {
+      if (state.token) {
+        const res = await api('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ firstName, lastName, phone })
+        });
+        if (res.user) {
+          state.user = { ...state.user, ...res.user };
+          const store = localStorage.getItem('parksmart_token') ? localStorage : sessionStorage;
+          store.setItem('parksmart_user', JSON.stringify(state.user));
+        }
+      } else {
+        state.user = { ...state.user, firstName, lastName, phone };
+        localStorage.setItem('parksmart_user', JSON.stringify(state.user));
+      }
+      syncProfile();
+      closeProfileModal();
+      toast('Profile updated successfully!');
+      if (window.addNotification) window.addNotification('👤 Profile updated successfully.');
+    } catch (err) {
+      toast(err.message || 'Failed to update profile.');
+    }
+  }
+
+  // --- Settings Modal ---
+  function openSettingsModal() {
+    const modal = $('settingsModal');
+    if (!modal) return;
+    const dropdown = $('profileDropdown');
+    if (dropdown) dropdown.classList.remove('show');
+
+    const s = getSavedSettings();
+    if ($('settingBrowserNotif')) $('settingBrowserNotif').checked = !!s.browserNotif;
+    if ($('settingBookingAlerts')) $('settingBookingAlerts').checked = s.bookingAlerts !== false;
+    if ($('settingSoundEffects')) $('settingSoundEffects').checked = s.soundEffects !== false;
+    if ($('settingVehicleNumber')) $('settingVehicleNumber').value = s.vehicleNumber || '';
+    if ($('settingVehicleType')) $('settingVehicleType').value = s.vehicleType || 'Car';
+
+    switchSettingsTab('pref');
+    modal.hidden = false;
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+  }
+
+  function closeSettingsModal() {
+    const modal = $('settingsModal');
+    if (modal) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      modal.hidden = true;
+    }
+  }
+
+  function switchSettingsTab(tab) {
+    const isPref = tab === 'pref';
+    if ($('settingsPrefSection')) $('settingsPrefSection').style.display = isPref ? 'block' : 'none';
+    if ($('settingsSecSection')) $('settingsSecSection').style.display = isPref ? 'none' : 'block';
+
+    if ($('settingsTabPref')) {
+      $('settingsTabPref').className = isPref ? 'settings-tab-btn active' : 'settings-tab-btn';
+      $('settingsTabPref').style.background = isPref ? 'rgba(0, 217, 166, 0.2)' : 'rgba(255,255,255,0.05)';
+      $('settingsTabPref').style.color = isPref ? '#00d9a6' : '#94a3b8';
+    }
+    if ($('settingsTabSec')) {
+      $('settingsTabSec').className = !isPref ? 'settings-tab-btn active' : 'settings-tab-btn';
+      $('settingsTabSec').style.background = !isPref ? 'rgba(0, 217, 166, 0.2)' : 'rgba(255,255,255,0.05)';
+      $('settingsTabSec').style.color = !isPref ? '#00d9a6' : '#94a3b8';
+    }
+  }
+
+  function handleSettingsPrefSubmit(e) {
+    e.preventDefault();
+    const settings = {
+      browserNotif: !!$('settingBrowserNotif')?.checked,
+      bookingAlerts: !!$('settingBookingAlerts')?.checked,
+      soundEffects: !!$('settingSoundEffects')?.checked,
+      vehicleNumber: $('settingVehicleNumber')?.value.trim().toUpperCase() || '',
+      vehicleType: $('settingVehicleType')?.value || 'Car'
+    };
+
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+
+    if (settings.browserNotif && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    closeSettingsModal();
+    toast('Settings & Preferences saved successfully!');
+    if (window.addNotification) window.addNotification('⚙️ Application preferences saved.');
+  }
+
+  async function handlePasswordChange(e) {
+    e.preventDefault();
+    const currentPassword = $('settingsCurrentPass')?.value || '';
+    const newPassword = $('settingsNewPass')?.value || '';
+    const confirmPassword = $('settingsConfirmPass')?.value || '';
+
+    if (!currentPassword || !newPassword) {
+      return toast('Please enter current and new password.');
+    }
+    if (newPassword.length < 6) {
+      return toast('New password must contain at least 6 characters.');
+    }
+    if (newPassword !== confirmPassword) {
+      return toast('New passwords do not match.');
+    }
+
+    try {
+      if (state.token) {
+        await api('/auth/password', {
+          method: 'PUT',
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+      }
+      $('settingsPasswordForm')?.reset();
+      closeSettingsModal();
+      toast('Password changed successfully!');
+      if (window.addNotification) window.addNotification('🔒 Security password was updated successfully.');
+    } catch (err) {
+      toast(err.message || 'Failed to update password.');
+    }
+  }
+
+  // --- Notifications Synchronization ---
+  async function syncServerNotifications() {
+    if (!state.token) return;
+    try {
+      const serverNotifs = await api('/notifications');
+      if (Array.isArray(serverNotifs)) {
+        const local = JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]');
+        serverNotifs.forEach(sn => {
+          const titleAndMsg = sn.title ? `${sn.title}: ${sn.message}` : sn.message;
+          const exists = local.some(l => l.serverId === sn.id || l.msg === titleAndMsg);
+          if (!exists) {
+            local.push({
+              serverId: sn.id,
+              msg: titleAndMsg,
+              time: new Date(sn.created_at || sn.createdAt).getTime() || Date.now(),
+              read: !!(sn.is_read || sn.isRead)
+            });
+          }
+        });
+        local.sort((a,b) => b.time - a.time);
+        localStorage.setItem(NOTIF_KEY, JSON.stringify(local.slice(0, 40)));
+        if (window.renderNotifs) window.renderNotifs();
+        updateNotificationBadge();
+      }
+    } catch (e) {}
+  }
+
+  function updateNotificationBadge() {
+    try {
+      const list = JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]');
+      const unreadCount = list.filter(n => !n.read).length;
+      const badge = $('notifBadge');
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.style.display = 'flex';
+          badge.className = unreadCount > 9 ? 'count-badge' : '';
+          badge.textContent = unreadCount > 9 ? '9+' : (unreadCount > 1 ? String(unreadCount) : '');
+        } else {
+          badge.style.display = 'none';
+          badge.textContent = '';
+        }
+      }
+    } catch (e) {}
+  }
+
+  function initProfileAndSettingsUI() {
+    $('myProfileButton')?.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openProfileModal();
+    });
+    $('profileModalClose')?.addEventListener('click', closeProfileModal);
+    $('profileModalCancel')?.addEventListener('click', closeProfileModal);
+    $('profileForm')?.addEventListener('submit', handleProfileSubmit);
+
+    $('settingsButton')?.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openSettingsModal();
+    });
+    $('settingsModalClose')?.addEventListener('click', closeSettingsModal);
+    $('settingsTabPref')?.addEventListener('click', () => switchSettingsTab('pref'));
+    $('settingsTabSec')?.addEventListener('click', () => switchSettingsTab('sec'));
+    $('settingsPrefForm')?.addEventListener('submit', handleSettingsPrefSubmit);
+    $('settingsPasswordForm')?.addEventListener('submit', handlePasswordChange);
+
+    $('profileModal')?.addEventListener('click', e => {
+      if (e.target === $('profileModal')) closeProfileModal();
+    });
+    $('settingsModal')?.addEventListener('click', e => {
+      if (e.target === $('settingsModal')) closeSettingsModal();
+    });
+
+    const notifBtn = $('notificationButton') || document.querySelector('.dashboard-notification');
+    if (notifBtn) {
+      notifBtn.addEventListener('click', () => {
+        if (state.token) {
+          api('/notifications/read-all', { method: 'POST' }).catch(() => {});
+        }
+        setTimeout(updateNotificationBadge, 200);
+      });
+    }
+
+    document.addEventListener('click', e => {
+      if (e.target?.id === 'notifClear') {
+        if (state.token) {
+          api('/notifications/clear', { method: 'DELETE' }).catch(() => {});
+        }
+        setTimeout(updateNotificationBadge, 100);
+      }
+    });
+
+    // Populate default vehicle in booking if configured
+    const originalOpenBookingDetails = window.openBookingDetailsModal;
+    if (typeof originalOpenBookingDetails === 'function') {
+      window.openBookingDetailsModal = function(parking, slotId, amount) {
+        originalOpenBookingDetails(parking, slotId, amount);
+        const s = getSavedSettings();
+        if (s.vehicleNumber && $('bookingCarNumber')) {
+          $('bookingCarNumber').value = s.vehicleNumber;
+        }
+      };
+    }
+
+    updateNotificationBadge();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initProfileAndSettingsUI, { once: true });
+  } else {
+    initProfileAndSettingsUI();
+  }
+
   async function bootstrapDashboard(){
     try{
       if(!state.token) throw new Error('Please login first.');
@@ -450,6 +752,8 @@
       $('parkingList') && ($('parkingList').innerHTML='<div class="no-parking parking-location-prompt"><h3>📍 Select a location to find parking</h3><p>Use <strong>Current Location</strong> or search for an area, city or locality.</p></div>');
       $('parkingCount') && ($('parkingCount').textContent='0 locations');
       await renderPayments(); await renderLogs();
+      await syncServerNotifications();
+      updateNotificationBadge();
     }catch(err){toast(err.message);}
   }
 

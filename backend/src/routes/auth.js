@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const pool = require('../db');
-const { signToken } = require('../middleware/auth');
+const { signToken, requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -49,6 +49,90 @@ router.post('/login', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Login failed.' });
+  }
+});
+
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, first_name, last_name, email, phone, role, created_at FROM users WHERE id=? LIMIT 1',
+      [req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'User not found.' });
+    const user = rows[0];
+    res.json({
+      user: {
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        createdAt: user.created_at
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to fetch user profile.' });
+  }
+});
+
+router.put('/profile', requireAuth, async (req, res) => {
+  try {
+    const { firstName, lastName, phone } = req.body;
+    if (!firstName || !lastName || !phone) {
+      return res.status(400).json({ message: 'First name, last name, and phone number are required.' });
+    }
+    await pool.query(
+      'UPDATE users SET first_name=?, last_name=?, phone=? WHERE id=?',
+      [firstName.trim(), lastName.trim(), phone.trim(), req.user.id]
+    );
+    const [rows] = await pool.query(
+      'SELECT id, first_name, last_name, email, phone, role, created_at FROM users WHERE id=? LIMIT 1',
+      [req.user.id]
+    );
+    const user = rows[0];
+    res.json({
+      message: 'Profile updated successfully.',
+      user: {
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        createdAt: user.created_at
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to update profile.' });
+  }
+});
+
+router.put('/password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must contain at least 6 characters.' });
+    }
+    const [rows] = await pool.query('SELECT password_hash FROM users WHERE id=? LIMIT 1', [req.user.id]);
+    if (!rows.length) return res.status(404).json({ message: 'User not found.' });
+
+    const isMatch = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect.' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await pool.query('UPDATE users SET password_hash=? WHERE id=?', [newHash, req.user.id]);
+    res.json({ message: 'Password updated successfully.' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to update password.' });
   }
 });
 

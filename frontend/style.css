@@ -4083,3 +4083,69 @@ button:focus-visible, select:focus-visible, input:focus-visible {
     font-size: 28px;
     margin-bottom: 6px;
 }
+
+/* =========================================================
+   PROFILE & SETTINGS MODALS & NOTIFICATIONS
+========================================================= */
+
+.dashboard-notification {
+    position: relative;
+    cursor: pointer;
+}
+
+#notifBadge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: none;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+}
+
+#notifBadge.count-badge {
+    min-width: 16px;
+    height: 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    top: 3px;
+    right: 3px;
+}
+
+.settings-tab-btn {
+    transition: all 0.2s ease;
+}
+
+.settings-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.settings-tab-btn.active {
+    background: rgba(0, 217, 166, 0.2) !important;
+    color: #00d9a6 !important;
+    border-color: rgba(0, 217, 166, 0.4) !important;
+}
+
+.notif-item {
+    cursor: pointer;
+    transition: background 0.18s ease;
+}
+
+.notif-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.notif-item.unread {
+    background: rgba(0, 217, 166, 0.08);
+    border-left: 3px solid #00d9a6;
+}
+

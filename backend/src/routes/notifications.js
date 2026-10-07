@@ -7,7 +7,27 @@ router.get('/',requireAuth,async(req,res)=>{
   res.json(rows);
 });
 router.post('/:id/read',requireAuth,async(req,res)=>{
-  await pool.query('UPDATE notifications SET is_read=1 WHERE id=? AND user_id=?',[req.params.id,req.user.id]);
-  res.json({ok:true});
+  try {
+    await pool.query('UPDATE notifications SET is_read=1 WHERE id=? AND user_id=?',[req.params.id,req.user.id]);
+    res.json({ok:true});
+  } catch (e) {
+    res.status(500).json({message: 'Failed to update notification'});
+  }
+});
+router.post('/read-all',requireAuth,async(req,res)=>{
+  try {
+    await pool.query('UPDATE notifications SET is_read=1 WHERE user_id=?',[req.user.id]);
+    res.json({ok:true});
+  } catch (e) {
+    res.status(500).json({message: 'Failed to mark all notifications as read'});
+  }
+});
+router.delete('/clear',requireAuth,async(req,res)=>{
+  try {
+    await pool.query('DELETE FROM notifications WHERE user_id=?',[req.user.id]);
+    res.json({ok:true});
+  } catch (e) {
+    res.status(500).json({message: 'Failed to clear notifications'});
+  }
 });
 module.exports=router;
