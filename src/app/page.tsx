@@ -11,12 +11,44 @@ declare global {
 
 export default function OriginalParkSmartApp() {
   // Navigation & View State
+  const [viewMode, setViewMode] = useState<"landing" | "auth">("landing");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string>("");
   const [activePage, setActivePage] = useState<"dashboard" | "reservations" | "payments" | "logs">("dashboard");
   const [isSlotsOpen, setIsSlotsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Live Video & Landing State
+  const [liveTimer, setLiveTimer] = useState<string>("12:00:00 PM");
+  const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
+  const [isVideoMuted, setIsVideoMuted] = useState<boolean>(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleVideoPlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+    } else {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+  };
+
+  const toggleVideoMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsVideoMuted(videoRef.current.muted);
+  };
+
+  useEffect(() => {
+    const updateTime = () => {
+      setLiveTimer(new Date().toLocaleTimeString());
+    };
+    updateTime();
+    const timerInterval = setInterval(updateTime, 1000);
+    return () => clearInterval(timerInterval);
+  }, []);
 
   // Profile Modal State
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -417,6 +449,7 @@ export default function OriginalParkSmartApp() {
     if (!confirm("Do you want to logout?")) return;
     setToken("");
     setUser(null);
+    setViewMode("landing");
     localStorage.removeItem("parksmart_token");
     localStorage.removeItem("parksmart_user");
     sessionStorage.removeItem("parksmart_token");
@@ -586,8 +619,248 @@ export default function OriginalParkSmartApp() {
            AUTHENTICATION PAGE (When not logged in)
       ====================================================== */}
       {!user ? (
-        <main id="authPage" className="auth-page">
-          <div className="auth-wrapper">
+        viewMode === "landing" ? (
+          /* =====================================================
+               LANDING / HERO PAGE (PARKMOBILE STYLE WITH LIVE VIDEO)
+          ====================================================== */
+          <section id="landingPage" className="parkmobile-landing">
+            {/* TOP NAVBAR */}
+            <header className="pm-navbar">
+              <div className="pm-nav-container">
+                <div className="pm-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                  <div className="pm-brand-icon">P</div>
+                  <div className="pm-brand-name">
+                    <strong>ParkSmart</strong>
+                    <span className="pm-brand-sub">by Arrive</span>
+                  </div>
+                </div>
+
+                <nav className="pm-nav-links">
+                  <div className="pm-nav-item">
+                    <button type="button" className="pm-nav-btn">Drivers <span className="pm-chevron">▾</span></button>
+                    <div className="pm-dropdown-menu">
+                      <a href="#reservations" onClick={(e) => { e.preventDefault(); setAuthMode("login"); setViewMode("auth"); }}>Find Parking</a>
+                      <a href="#reservations" onClick={(e) => { e.preventDefault(); setAuthMode("register"); setViewMode("auth"); }}>Reserve in Advance</a>
+                      <a href="#how-it-works">How It Works</a>
+                      <a href="#live-video">Live Lot Monitor</a>
+                    </div>
+                  </div>
+                  <div className="pm-nav-item">
+                    <button type="button" className="pm-nav-btn">Businesses <span className="pm-chevron">▾</span></button>
+                    <div className="pm-dropdown-menu">
+                      <a href="#how-it-works">Fleet Management</a>
+                      <a href="#how-it-works">Corporate Lots</a>
+                      <a href="#how-it-works">Event Valet</a>
+                    </div>
+                  </div>
+                  <div className="pm-nav-item">
+                    <button type="button" className="pm-nav-btn">Parking providers <span className="pm-chevron">▾</span></button>
+                    <div className="pm-dropdown-menu">
+                      <a href="#how-it-works">Lot Operators</a>
+                      <a href="#live-video">IoT Smart Sensors</a>
+                      <a href="/admin">Operator Admin</a>
+                    </div>
+                  </div>
+                  <div className="pm-nav-item">
+                    <button type="button" className="pm-nav-btn">About <span className="pm-chevron">▾</span></button>
+                    <div className="pm-dropdown-menu">
+                      <a href="#how-it-works">Our Mission</a>
+                      <a href="#how-it-works">Smart Mobility</a>
+                      <a href="#how-it-works">Sustainability</a>
+                    </div>
+                  </div>
+                  <div className="pm-nav-item">
+                    <button type="button" className="pm-nav-btn">Support <span className="pm-chevron">▾</span></button>
+                    <div className="pm-dropdown-menu">
+                      <a href="#how-it-works">Help Center</a>
+                      <a href="#how-it-works">Contact Desk</a>
+                      <a href="#how-it-works">FAQs</a>
+                    </div>
+                  </div>
+                </nav>
+
+                <div className="pm-nav-actions">
+                  <button type="button" className="pm-btn-signin" onClick={() => { setAuthMode("login"); setViewMode("auth"); }}>Sign in</button>
+                  <button type="button" className="pm-btn-download" onClick={() => { setAuthMode("register"); setViewMode("auth"); }}>Reserve Spot</button>
+                </div>
+              </div>
+            </header>
+
+            {/* HERO SECTION */}
+            <div className="pm-hero-section">
+              <div className="pm-hero-container">
+
+                {/* LEFT COLUMN */}
+                <div className="pm-hero-left">
+                  <h1 className="pm-hero-title">Parking reservations</h1>
+                  <p className="pm-hero-desc">
+                    Imagine heading downtown for a concert, sports game, or even a business meeting, and a parking spot is waiting for you. With ParkSmart, we make it easy for you to book a parking spot ahead of time and head straight into your next event.
+                  </p>
+                  <div className="pm-hero-actions">
+                    <button type="button" className="pm-btn-reserve" onClick={() => { setAuthMode("register"); setViewMode("auth"); }}>
+                      Reserve a parking spot
+                    </button>
+                  </div>
+
+                  {/* FEATURE HIGHLIGHTS */}
+                  <div className="pm-hero-features">
+                    <div className="pm-feat-item">
+                      <span className="pm-feat-icon">✓</span>
+                      <span>Guaranteed spot ready before you arrive</span>
+                    </div>
+                    <div className="pm-feat-item">
+                      <span className="pm-feat-icon">✓</span>
+                      <span>Contactless entry via QR &amp; license plate recognition</span>
+                    </div>
+                    <div className="pm-feat-item">
+                      <span className="pm-feat-icon">✓</span>
+                      <span>Live video CCTV &amp; real-time sensor occupancy</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: LIVE VIDEO & ANIMATIONS */}
+                <div className="pm-hero-right" id="live-video">
+                  <div className="pm-video-card">
+                    {/* LIVE PARKING VIDEO */}
+                    <video ref={videoRef} id="landingLiveVideo" className="pm-live-video" autoPlay loop muted playsInline preload="auto">
+                      <source src="/live-parking.mp4" type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+
+                    {/* HUD OVERLAY TOP */}
+                    <div className="pm-video-hud-top">
+                      <div className="pm-live-badge">
+                        <span className="pm-pulse-dot"></span>
+                        <strong>LIVE CCTV CAM #04</strong>
+                      </div>
+                      <div className="pm-time-badge" id="pmLiveTimer">
+                        {liveTimer}
+                      </div>
+                    </div>
+
+                    {/* AI OBJECT DETECTION SCANNER OVERLAY */}
+                    <div className="pm-ai-overlay">
+                      <div className="pm-scanline"></div>
+                      <div className="pm-detection-box box-1">
+                        <span className="pm-box-tag green">BAY 14 • VACANT</span>
+                      </div>
+                      <div className="pm-detection-box box-2">
+                        <span className="pm-box-tag red">BAY 15 • OCCUPIED</span>
+                      </div>
+                      <div className="pm-detection-box box-3">
+                        <span className="pm-box-tag green">BAY 16 • VACANT</span>
+                      </div>
+                    </div>
+
+                    {/* HUD OVERLAY BOTTOM */}
+                    <div className="pm-video-hud-bottom">
+                      <div className="pm-hud-occupancy">
+                        <div className="pm-occ-header">
+                          <span>Real-time Bay Availability</span>
+                          <strong>42 / 50 Free (84%)</strong>
+                        </div>
+                        <div className="pm-occ-bar">
+                          <div className="pm-occ-fill" style={{ width: "84%" }}></div>
+                        </div>
+                      </div>
+                      <div className="pm-video-controls">
+                        <button type="button" className="pm-ctrl-btn" onClick={toggleVideoPlay} title="Play/Pause">
+                          {isVideoPlaying ? "⏸" : "▶"}
+                        </button>
+                        <button type="button" className="pm-ctrl-btn" onClick={toggleVideoMute} title="Mute/Unmute">
+                          {isVideoMuted ? "🔇" : "🔊"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* HOW RESERVATIONS WORK SECTION */}
+            <div className="pm-steps-section" id="how-it-works">
+              <div className="pm-steps-container">
+                <div className="pm-steps-header">
+                  <h2>How parking reservations work</h2>
+                  <p>Three simple steps to stress-free guaranteed parking.</p>
+                </div>
+                <div className="pm-steps-grid">
+                  <div className="pm-step-card">
+                    <div className="pm-step-num">1</div>
+                    <h3>Search &amp; Compare</h3>
+                    <p>Browse available spots near your destination, compare hourly tariffs, and review real-time vacancy counts.</p>
+                  </div>
+                  <div className="pm-step-card">
+                    <div className="pm-step-num">2</div>
+                    <h3>Reserve in Advance</h3>
+                    <p>Pick your slot number, choose your duration, and reserve your bay with instant booking confirmation.</p>
+                  </div>
+                  <div className="pm-step-card">
+                    <div className="pm-step-num">3</div>
+                    <h3>Drive Straight In</h3>
+                    <p>Scan your digital pass or let automated OCR barrier cameras check your plate for touchless entry.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* STATS BANNER */}
+            <div className="pm-stats-banner">
+              <div className="pm-stats-container">
+                <div className="pm-stat-box">
+                  <strong>50+</strong>
+                  <span>Smart Parking Lots</span>
+                </div>
+                <div className="pm-stat-box">
+                  <strong>99.4%</strong>
+                  <span>Sensor Accuracy</span>
+                </div>
+                <div className="pm-stat-box">
+                  <strong>15,000+</strong>
+                  <span>Reservations Fulfilled</span>
+                </div>
+                <div className="pm-stat-box">
+                  <strong>&lt; 3 mins</strong>
+                  <span>Average Time Saved</span>
+                </div>
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <footer className="pm-footer">
+              <div className="pm-footer-container">
+                <div className="pm-footer-brand">
+                  <div className="pm-brand-icon">P</div>
+                  <strong>ParkSmart</strong>
+                  <p>© 2026 ParkSmart Technologies. All rights reserved.</p>
+                </div>
+                <div className="pm-footer-links">
+                  <a href="#login" onClick={(e) => { e.preventDefault(); setAuthMode("login"); setViewMode("auth"); }}>Driver Sign In</a>
+                  <a href="#register" onClick={(e) => { e.preventDefault(); setAuthMode("register"); setViewMode("auth"); }}>Create Driver Account</a>
+                  <a href="/admin">Operator &amp; Admin Portal</a>
+                </div>
+              </div>
+            </footer>
+
+            {/* FLOATING P BUTTON */}
+            <button type="button" className="pm-floating-p-btn" onClick={() => { setAuthMode("register"); setViewMode("auth"); }} title="Reserve a parking spot">
+              <span>P</span>
+            </button>
+          </section>
+        ) : (
+          <main id="authPage" className="auth-page">
+            <div className="auth-wrapper">
+              <div className="auth-top-actions">
+                <button
+                  type="button"
+                  className="back-to-home-btn"
+                  onClick={() => setViewMode("landing")}
+                >
+                  ← Back to Home &amp; Live View
+                </button>
+              </div>
             {/* BRAND */}
             <div className="brand">
               <div className="brand-logo">P</div>
@@ -811,7 +1084,8 @@ export default function OriginalParkSmartApp() {
             </div>
           </div>
         </main>
-      ) : (
+      )
+    ) : (
         /* =====================================================
              PARKSMART DASHBOARD VIEW (When logged in)
         ====================================================== */

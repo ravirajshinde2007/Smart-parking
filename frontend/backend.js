@@ -120,8 +120,11 @@
       clearSession();
       $('dashboardView')?.classList.add('hidden');
       if($('dashboardView')) $('dashboardView').style.display='none';
-      if($('authPage')) $('authPage').style.display='flex';
-      window.showLogin?.();
+      if(window.showLandingPage) window.showLandingPage();
+      else {
+        if($('authPage')) $('authPage').style.display='flex';
+        window.showLogin?.();
+      }
       toast('You have been logged out.');
     });
   }
@@ -746,6 +749,8 @@
       syncProfile();
       await refreshBookings();
       initMap();
+      if($('landingPage')) $('landingPage').style.display='none';
+      if($('authPage')) $('authPage').style.display='none';
       if(window.showDashboard) window.showDashboard();
       $('dashboardSection') && ($('dashboardSection').hidden=false);
       $('parkingSlotsPage') && ($('parkingSlotsPage').hidden=true);
@@ -761,8 +766,16 @@
   window.displayDashboardParking=renderParking;
   window.refreshSidebarPages=()=>{renderPayments();renderLogs();displayMyBookings();};
 
-  // Auto-restore a valid server session if present.
-  if(state.token) setTimeout(bootstrapDashboard,100);
+  // Auto-restore a valid server session if present, otherwise display landing page
+  if(state.token) {
+    setTimeout(bootstrapDashboard,100);
+  } else {
+    setTimeout(()=>{
+      if(window.location.hash==='#login') window.showAuth?.('login');
+      else if(window.location.hash==='#register') window.showAuth?.('register');
+      else window.showLandingPage?.();
+    }, 50);
+  }
 
   window.ParkSmartAPI={api,state,bootstrapDashboard,bookSelectedParkingSlot:()=>window.bookSelectedParkingSlot()};
 })();

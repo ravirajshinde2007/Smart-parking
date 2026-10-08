@@ -26,6 +26,7 @@ app.use(helmet({
       imgSrc:["'self'","data:","blob:","https://unpkg.com","https://*.tile.openstreetmap.org","https://server.arcgisonline.com"],
       connectSrc:["'self'","https://unpkg.com","https://fonts.googleapis.com","https://fonts.gstatic.com","https://nominatim.openstreetmap.org","https://*.tile.openstreetmap.org","https://server.arcgisonline.com"],
       fontSrc:["'self'","data:","https://unpkg.com","https://fonts.gstatic.com"],
+      mediaSrc:["'self'","data:","blob:"],
       objectSrc:["'none'"],
       baseUri:["'self'"]
     }

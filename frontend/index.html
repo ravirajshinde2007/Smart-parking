@@ -55,12 +55,247 @@
 
 
     <!-- =====================================================
+         LANDING / HERO PAGE (PARKMOBILE STYLE WITH LIVE VIDEO)
+    ====================================================== -->
+    <section id="landingPage" class="parkmobile-landing">
+
+        <!-- TOP NAVBAR -->
+        <header class="pm-navbar">
+            <div class="pm-nav-container">
+                <div class="pm-brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                    <div class="pm-brand-icon">P</div>
+                    <div class="pm-brand-name">
+                        <strong>ParkSmart</strong>
+                        <span class="pm-brand-sub">by Arrive</span>
+                    </div>
+                </div>
+
+                <nav class="pm-nav-links">
+                    <div class="pm-nav-item">
+                        <button type="button" class="pm-nav-btn">Drivers <span class="pm-chevron">▾</span></button>
+                        <div class="pm-dropdown-menu">
+                            <a href="javascript:void(0)" onclick="showAuth('login')">Find Parking</a>
+                            <a href="javascript:void(0)" onclick="showAuth('register')">Reserve in Advance</a>
+                            <a href="#how-it-works">How It Works</a>
+                            <a href="#live-video">Live Lot Monitor</a>
+                        </div>
+                    </div>
+                    <div class="pm-nav-item">
+                        <button type="button" class="pm-nav-btn">Businesses <span class="pm-chevron">▾</span></button>
+                        <div class="pm-dropdown-menu">
+                            <a href="#how-it-works">Fleet Management</a>
+                            <a href="#how-it-works">Corporate Lots</a>
+                            <a href="#how-it-works">Event Valet</a>
+                        </div>
+                    </div>
+                    <div class="pm-nav-item">
+                        <button type="button" class="pm-nav-btn">Parking providers <span class="pm-chevron">▾</span></button>
+                        <div class="pm-dropdown-menu">
+                            <a href="#how-it-works">Lot Operators</a>
+                            <a href="#live-video">IoT Smart Sensors</a>
+                            <a href="/admin">Operator Admin</a>
+                        </div>
+                    </div>
+                    <div class="pm-nav-item">
+                        <button type="button" class="pm-nav-btn">About <span class="pm-chevron">▾</span></button>
+                        <div class="pm-dropdown-menu">
+                            <a href="#how-it-works">Our Mission</a>
+                            <a href="#how-it-works">Smart Mobility</a>
+                            <a href="#how-it-works">Sustainability</a>
+                        </div>
+                    </div>
+                    <div class="pm-nav-item">
+                        <button type="button" class="pm-nav-btn">Support <span class="pm-chevron">▾</span></button>
+                        <div class="pm-dropdown-menu">
+                            <a href="#how-it-works">Help Center</a>
+                            <a href="#how-it-works">Contact Desk</a>
+                            <a href="#how-it-works">FAQs</a>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="pm-nav-actions">
+                    <button type="button" class="pm-btn-signin" onclick="showAuth('login')">Sign in</button>
+                    <button type="button" class="pm-btn-download" onclick="showAuth('register')">Reserve Spot</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- HERO SECTION -->
+        <div class="pm-hero-section">
+            <div class="pm-hero-container">
+
+                <!-- LEFT COLUMN -->
+                <div class="pm-hero-left">
+                    <h1 class="pm-hero-title">Parking reservations</h1>
+                    <p class="pm-hero-desc">
+                        Imagine heading downtown for a concert, sports game, or even a business meeting, and a parking spot is waiting for you. With ParkSmart, we make it easy for you to book a parking spot ahead of time and head straight into your next event.
+                    </p>
+                    <div class="pm-hero-actions">
+                        <button type="button" class="pm-btn-reserve" onclick="showAuth('register')">
+                            Reserve a parking spot
+                        </button>
+                    </div>
+
+                    <!-- FEATURE HIGHLIGHTS -->
+                    <div class="pm-hero-features">
+                        <div class="pm-feat-item">
+                            <span class="pm-feat-icon">✓</span>
+                            <span>Guaranteed spot ready before you arrive</span>
+                        </div>
+                        <div class="pm-feat-item">
+                            <span class="pm-feat-icon">✓</span>
+                            <span>Contactless entry via QR &amp; license plate recognition</span>
+                        </div>
+                        <div class="pm-feat-item">
+                            <span class="pm-feat-icon">✓</span>
+                            <span>Live video CCTV &amp; real-time sensor occupancy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: LIVE VIDEO & ANIMATIONS -->
+                <div class="pm-hero-right" id="live-video">
+                    <div class="pm-video-card">
+                        <!-- LIVE PARKING VIDEO -->
+                        <video id="landingLiveVideo" class="pm-live-video" autoplay loop muted playsinline preload="auto">
+                            <source src="live-parking.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+
+                        <!-- HUD OVERLAY TOP -->
+                        <div class="pm-video-hud-top">
+                            <div class="pm-live-badge">
+                                <span class="pm-pulse-dot"></span>
+                                <strong>LIVE CCTV CAM #04</strong>
+                            </div>
+                            <div class="pm-time-badge" id="pmLiveTimer">
+                                12:00:00 PM
+                            </div>
+                        </div>
+
+                        <!-- AI OBJECT DETECTION SCANNER OVERLAY -->
+                        <div class="pm-ai-overlay">
+                            <div class="pm-scanline"></div>
+                            <div class="pm-detection-box box-1">
+                                <span class="pm-box-tag green">BAY 14 • VACANT</span>
+                            </div>
+                            <div class="pm-detection-box box-2">
+                                <span class="pm-box-tag red">BAY 15 • OCCUPIED</span>
+                            </div>
+                            <div class="pm-detection-box box-3">
+                                <span class="pm-box-tag green">BAY 16 • VACANT</span>
+                            </div>
+                        </div>
+
+                        <!-- HUD OVERLAY BOTTOM -->
+                        <div class="pm-video-hud-bottom">
+                            <div class="pm-hud-occupancy">
+                                <div class="pm-occ-header">
+                                    <span>Real-time Bay Availability</span>
+                                    <strong>42 / 50 Free (84%)</strong>
+                                </div>
+                                <div class="pm-occ-bar">
+                                    <div class="pm-occ-fill" style="width: 84%;"></div>
+                                </div>
+                            </div>
+                            <div class="pm-video-controls">
+                                <button type="button" class="pm-ctrl-btn" id="pmVideoPlayBtn" title="Play/Pause">⏸</button>
+                                <button type="button" class="pm-ctrl-btn" id="pmVideoMuteBtn" title="Mute/Unmute">🔇</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- HOW RESERVATIONS WORK SECTION -->
+        <div class="pm-steps-section" id="how-it-works">
+            <div class="pm-steps-container">
+                <div class="pm-steps-header">
+                    <h2>How parking reservations work</h2>
+                    <p>Three simple steps to stress-free guaranteed parking.</p>
+                </div>
+                <div class="pm-steps-grid">
+                    <div class="pm-step-card">
+                        <div class="pm-step-num">1</div>
+                        <h3>Search &amp; Compare</h3>
+                        <p>Browse available spots near your destination, compare hourly tariffs, and review real-time vacancy counts.</p>
+                    </div>
+                    <div class="pm-step-card">
+                        <div class="pm-step-num">2</div>
+                        <h3>Reserve in Advance</h3>
+                        <p>Pick your slot number, choose your duration, and reserve your bay with instant booking confirmation.</p>
+                    </div>
+                    <div class="pm-step-card">
+                        <div class="pm-step-num">3</div>
+                        <h3>Drive Straight In</h3>
+                        <p>Scan your digital pass or let automated OCR barrier cameras check your plate for touchless entry.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS BANNER -->
+        <div class="pm-stats-banner">
+            <div class="pm-stats-container">
+                <div class="pm-stat-box">
+                    <strong>50+</strong>
+                    <span>Smart Parking Lots</span>
+                </div>
+                <div class="pm-stat-box">
+                    <strong>99.4%</strong>
+                    <span>Sensor Accuracy</span>
+                </div>
+                <div class="pm-stat-box">
+                    <strong>15,000+</strong>
+                    <span>Reservations Fulfilled</span>
+                </div>
+                <div class="pm-stat-box">
+                    <strong>&lt; 3 mins</strong>
+                    <span>Average Time Saved</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="pm-footer">
+            <div class="pm-footer-container">
+                <div class="pm-footer-brand">
+                    <div class="pm-brand-icon">P</div>
+                    <strong>ParkSmart</strong>
+                    <p>© 2026 ParkSmart Technologies. All rights reserved.</p>
+                </div>
+                <div class="pm-footer-links">
+                    <a href="javascript:void(0)" onclick="showAuth('login')">Driver Sign In</a>
+                    <a href="javascript:void(0)" onclick="showAuth('register')">Create Driver Account</a>
+                    <a href="/admin">Operator &amp; Admin Portal</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- FLOATING P BUTTON (PARKMOBILE BOTTOM-RIGHT ICON) -->
+        <button type="button" class="pm-floating-p-btn" onclick="showAuth('register')" title="Reserve a parking spot">
+            <span>P</span>
+        </button>
+
+    </section>
+
+
+    <!-- =====================================================
          AUTHENTICATION PAGE
     ====================================================== -->
 
-    <main id="authPage" class="auth-page">
+    <main id="authPage" class="auth-page" style="display: none;">
 
         <div class="auth-wrapper">
+
+            <div class="auth-top-actions">
+                <button type="button" class="back-to-home-btn" onclick="showLandingPage()">
+                    ← Back to Home &amp; Live View
+                </button>
+            </div>
 
             <!-- BRAND -->
 

@@ -80,9 +80,109 @@ function showRegister() {
 window.showLogin = showLogin;
 window.showRegister = showRegister;
 
+/* =========================================================
+   LANDING PAGE & AUTH TRANSITIONS
+========================================================= */
+
+function showLandingPage() {
+    const landing = document.getElementById("landingPage");
+    const auth = document.getElementById("authPage");
+    const dashboard = document.getElementById("dashboardView");
+
+    if (dashboard) {
+        dashboard.classList.add("hidden");
+        dashboard.style.display = "none";
+    }
+
+    if (auth) {
+        auth.style.display = "none";
+    }
+
+    if (landing) {
+        landing.style.display = "block";
+    }
+
+    const video = document.getElementById("landingLiveVideo");
+    if (video) {
+        video.play().catch(function() {});
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showAuth(mode) {
+    const landing = document.getElementById("landingPage");
+    const auth = document.getElementById("authPage");
+
+    if (landing) {
+        landing.style.display = "none";
+    }
+
+    if (auth) {
+        auth.style.display = "flex";
+    }
+
+    if (mode === "register") {
+        showRegister();
+    } else {
+        showLogin();
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+window.showLandingPage = showLandingPage;
+window.showAuth = showAuth;
+
+// Setup Live Video HUD timer and controls
+function initLandingLiveHUD() {
+    const timerEl = document.getElementById("pmLiveTimer");
+    if (timerEl) {
+        function updateClock() {
+            const now = new Date();
+            timerEl.textContent = now.toLocaleTimeString();
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
+    const video = document.getElementById("landingLiveVideo");
+    const playBtn = document.getElementById("pmVideoPlayBtn");
+    const muteBtn = document.getElementById("pmVideoMuteBtn");
+
+    if (video && playBtn) {
+        playBtn.addEventListener("click", function () {
+            if (video.paused) {
+                video.play().then(function() {
+                    playBtn.textContent = "⏸";
+                }).catch(function() {});
+            } else {
+                video.pause();
+                playBtn.textContent = "▶";
+            }
+        });
+    }
+
+    if (video && muteBtn) {
+        muteBtn.addEventListener("click", function () {
+            video.muted = !video.muted;
+            muteBtn.textContent = video.muted ? "🔇" : "🔊";
+        });
+    }
+
+    // Hash navigation (#login or #register)
+    if (window.location.hash === "#login") {
+        showAuth("login");
+    } else if (window.location.hash === "#register") {
+        showAuth("register");
+    }
+}
+
 // Also bind the two auth-switch buttons directly so switching works even if
 // inline handlers are blocked by browser/security settings.
 document.addEventListener("DOMContentLoaded", function () {
+    initLandingLiveHUD();
+
     const openRegisterButton = document.getElementById("openRegisterButton");
     const openLoginButton = document.getElementById("openLoginButton");
 
@@ -266,13 +366,18 @@ function hideAllViews() {
 
 function showDashboard() {
 
+    const landingPage =
+        document.getElementById("landingPage");
+
+    if (landingPage) {
+        landingPage.style.display = "none";
+    }
+
     const authPage =
         document.getElementById("authPage");
 
     if (authPage) {
-
         authPage.style.display = "none";
-
     }
 
     if (dashboardView) {
