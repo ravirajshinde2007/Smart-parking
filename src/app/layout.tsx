@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Analytics } from '@vercel/analytics/next';
 import "./original.css";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <Analytics />
         <Script
           src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           strategy="beforeInteractive"
