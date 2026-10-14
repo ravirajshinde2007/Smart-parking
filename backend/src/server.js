@@ -15,8 +15,11 @@ const PORT = Number(process.env.PORT || 5000);
 // =========================================================
 // 1. PATH RESOLUTIONS
 // =========================================================
-const defaultUploadDir = process.env.VERCEL ? '/tmp/uploads' : path.resolve(__dirname, '../uploads');
-const uploadDir = path.resolve(process.env.UPLOAD_DIR || defaultUploadDir);
+const defaultUploadDir = process.env.VERCEL
+  ? '/tmp/uploads'
+  : path.resolve(__dirname, '../uploads');
+
+const uploadDir = process.env.UPLOAD_DIR || defaultUploadDir;
 try {
   fs.mkdirSync(uploadDir, { recursive: true });
 } catch (e) {
