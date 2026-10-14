@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:next": "next dev",
+    "dev:backend": "npm --prefix backend run dev",
     "build": "next build",
     "start": "next start",
-    "check": "tsc --noEmit"
+    "start:backend": "npm --prefix backend start",
+    "check": "tsc --noEmit",
+    "check:backend": "npm --prefix backend run check"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

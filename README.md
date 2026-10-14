@@ -1,211 +1,155 @@
-# ParkSmart — Node.js + Express + MySQL Backend
+# ParkSmart — Smart Parking Management System
 
-This package keeps the existing ParkSmart UI/idea and moves the important state and business logic to the server.
+A full-stack, enterprise-grade smart parking reservation, camera plate recognition (OCR), and slot management system.
 
-## What moved to the backend
+---
 
-- User registration/login with bcrypt password hashing + JWT
-- Parking locations and availability
-- Slot status and server-side double-booking protection
-- Booking creation/cancellation
-- Payment records and transaction IDs
-- Entry/exit logs
-- Vehicle photos
-- Server-side OCR of the captured vehicle image
-- Plate matching against the vehicle number entered during booking
-- Extra payment calculation after exit
-- Notifications
-- Protected access to stored vehicle photos
+## Project Structure & Architecture
 
-The frontend keeps only a short-lived authentication token and UI/cache state. Booking records are no longer stored in localStorage/IndexedDB.
-
-## Project layout
+The codebase is organized into cleanly separated tiers:
 
 ```text
-parksmart-node-backend/
-├─ backend/
-│  ├─ src/
-│  │  ├─ middleware/auth.js
-│  │  ├─ routes/auth.js
-│  │  ├─ routes/parking.js
-│  │  ├─ routes/bookings.js
-│  │  ├─ routes/access.js
-│  │  ├─ routes/payments.js
-│  │  ├─ routes/notifications.js
-│  │  ├─ utils/ocr.js
-│  │  ├─ utils/plate.js
-│  │  ├─ db.js
-│  │  └─ server.js
-│  ├─ schema.sql
-│  ├─ seed.sql
-│  ├─ package.json
-│  └─ .env.example
-└─ frontend/
-   ├─ index.html
-   ├─ script.js
-   ├─ style.css
-   └─ backend.js
+Smart parking/
+├── backend/                  # Node.js + Express API Server
+│   ├── src/
+│   │   ├── middleware/       # Authentication & security middlewares
+│   │   │   └── auth.js       # JWT verification & role guard (USER, ADMIN, OPERATOR)
+│   │   ├── routes/           # RESTful API route controllers
+│   │   │   ├── access.js     # Vehicle camera OCR entry/exit verification
+│   │   │   ├── admin.js      # Admin dashboard statistics & management
+│   │   │   ├── auth.js       # Register, login, profile & password
+│   │   │   ├── bookings.js   # Slot booking, cancellation & status
+│   │   │   ├── notifications.js # System & user notifications
+│   │   │   ├── parking.js    # Locations, search & real-time slots
+│   │   │   └── payments.js   # Payment processing & transaction history
+│   │   ├── utils/            # Utilities & background engines
+│   │   │   ├── ocr.js        # Tesseract.js optical character recognition
+│   │   │   └── plate.js      # Indian license plate normalization & fuzzy match
+│   │   ├── db.js             # MySQL connection pool configuration
+│   │   └── server.js         # Express app entry, routes mounting & error handling
+│   ├── schema.sql            # MySQL DDL table schema definitions
+│   ├── seed.sql              # Initial parking lots, slots & demo data
+│   ├── uploads/              # Stored vehicle entrance/exit snapshot photos
+│   ├── package.json          # Backend dependencies (Express, Tesseract, MySQL2)
+│   └── .env.example          # Backend environment template
+│
+├── frontend/                 # Classic Vanilla Frontend (Served by Express)
+│   ├── index.html            # Main customer application UI
+│   ├── style.css             # Full ParkSmart responsive theme & animations
+│   ├── script.js             # Client-side map & UI interactions
+│   ├── backend.js            # API communication layer (Auth, Bookings, Camera OCR)
+│   ├── admin.html            # Admin dashboard interface
+│   ├── admin.css             # Admin dashboard dark-mode styling
+│   ├── admin.js              # Admin dashboard data fetching & table rendering
+│   ├── manifest.json         # PWA web manifest
+│   ├── service-worker.js     # Offline service worker cache
+│   ├── parking-8k.jpg        # Hero banner background asset
+│   ├── live-parking.mp4      # Live CCTV video feed simulation asset
+│   └── icons/                # Vector app icons
+│
+├── src/                      # Next.js 15 Full-Stack React 19 Application
+│   ├── app/                  # Next.js App Router
+│   │   ├── admin/page.tsx    # React Admin Dashboard
+│   │   ├── api/              # Serverless Next.js API route handlers
+│   │   ├── globals.css       # Tailwind CSS base styles
+│   │   ├── original.css      # Synchronized ParkSmart component styles
+│   │   ├── layout.tsx        # Root HTML layout with Leaflet CDN
+│   │   └── page.tsx          # Main React customer application & interactive map
+│   ├── components/           # Modular React UI components
+│   │   ├── AccessLogsView.tsx
+│   │   ├── AdminDashboard.tsx
+│   │   ├── AuthModal.tsx
+│   │   ├── BookingModal.tsx
+│   │   ├── HeroSection.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── ParkingCard.tsx
+│   │   ├── PaymentsView.tsx
+│   │   ├── ReservationsView.tsx
+│   │   └── SlotMapModal.tsx
+│   ├── lib/                  # Shared helper libraries (auth, db, plate, utils)
+│   └── types/                # TypeScript type definitions (User, Booking, Slot, etc.)
+│
+├── public/                   # Static assets for Next.js (video, image, icons)
+│   ├── icons/
+│   ├── live-parking.mp4
+│   └── parking-8k.jpg
+│
+├── package.json              # Workspace root configuration & convenience scripts
+├── tsconfig.json             # TypeScript compiler settings
+├── tailwind.config.ts        # Tailwind CSS utility configuration
+├── next.config.mjs           # Next.js bundler & runtime configuration
+├── START-WINDOWS.txt         # Quick execution sequence for Windows users
+└── README.md                 # Complete project documentation
 ```
 
-## 1. Create the MySQL database
+---
 
-Open MySQL Workbench or the MySQL terminal:
+## Step-by-Step Execution Sequence
 
-```sql
-SOURCE /full/path/to/backend/schema.sql;
-SOURCE /full/path/to/backend/seed.sql;
-```
+Follow these steps in sequence to set up and run the project:
 
-Or paste the two SQL files into MySQL Workbench and execute them.
+### Sequence 1: Database Setup (Prerequisite)
 
-## 2. Configure the backend
+1. Open **MySQL Workbench** or MySQL CLI.
+2. Execute `backend/schema.sql` to create the `parksmart` database and all tables.
+3. Execute `backend/seed.sql` to seed sample parking locations, slots, and demo data.
 
-Open `backend/.env.example`, copy it to `backend/.env`, then set your MySQL password and JWT secret.
+### Sequence 2: Configuration
 
-Example:
+1. In the `backend` directory, create `.env` from `.env.example`:
+   ```bash
+   copy backend\.env.example backend\.env
+   ```
+2. Edit `backend/.env` and enter your MySQL root password:
+   ```env
+   DB_PASSWORD=your_mysql_password
+   ```
 
-```env
-PORT=5000
-NODE_ENV=development
-JWT_SECRET=replace_with_a_long_random_secret
-CLIENT_ORIGIN=http://localhost:5000
+### Sequence 3: Running the Application
 
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=parksmart
-DB_USER=root
-DB_PASSWORD=your_mysql_password
+Choose either stack:
 
-UPLOAD_DIR=./uploads
-MAX_UPLOAD_MB=8
-OCR_LANGUAGE=eng
-ALLOW_MANUAL_PLATE=false
-```
-
-`ALLOW_MANUAL_PLATE=false` is intentional: entry/exit should not be accepted just because a user typed a matching number. The server checks the captured image with OCR.
-
-## 3. Install and start
-
+#### Option A: Node.js Express + Vanilla Frontend
 ```bash
+# From workspace root:
+npm run dev:backend
+
+# Or from backend directory:
 cd backend
-npm install
 npm run dev
 ```
+- **Customer UI**: [http://localhost:5000](http://localhost:5000)
+- **Admin Dashboard**: [http://localhost:5000/admin](http://localhost:5000/admin)
+- **API Health**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
-Open:
-
-```text
-http://localhost:5000
+#### Option B: Next.js 15 Full-Stack App
+```bash
+# From workspace root:
+npm run dev
 ```
+- **Customer UI**: [http://localhost:3000](http://localhost:3000)
+- **Admin Dashboard**: [http://localhost:3000/admin](http://localhost:3000/admin)
+- **API Health**: [http://localhost:3000/api/health](http://localhost:3000/api/health)
 
-Do not open `frontend/index.html` directly with `file://`. Camera access and API calls are more reliable through `localhost` or HTTPS.
+---
 
-## Camera + plate matching flow
+## Default Login Credentials
 
-1. User books a slot and enters vehicle number, e.g. `MH 15 AB 1234`.
-2. Booking is stored in MySQL.
-3. At entry, ParkSmart opens the browser camera.
-4. The user captures the vehicle/plate photo.
-5. The image is uploaded to Express using `multipart/form-data`.
-6. Tesseract OCR runs on the server.
-7. The detected plate is normalized and compared with the booking number.
-8. If it matches, the booking becomes `PARKED` and the slot becomes `OCCUPIED`.
-9. At exit, the same process happens again.
-10. If it matches, the booking becomes `COMPLETED` and the slot becomes `VACANT`.
-11. If it does not match, the photo/log is saved and the booking is placed into review instead of silently allowing exit.
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@gmail.com` | `raviraj@2007` |
+| **Demo Customer** | `rahul.verma@example.com` | `password123` |
 
-For a production parking gate, replace the demo OCR with a dedicated ALPR/ANPR engine or camera service because ordinary OCR is not reliable enough for every plate, angle, lighting condition, and distance.
+*(The Admin account is automatically verified and provisioned in MySQL when the backend boots).*
 
-## API overview
+---
 
-### Auth
-- `POST /api/auth/register`
-- `POST /api/auth/login`
+## Workspace Scripts Summary
 
-### Parking
-- `GET /api/parking/search?q=Nashik`
-- `GET /api/parking/nearby?lat=19.99&lng=73.76&radiusKm=15`
-- `GET /api/parking/:id/slots`
+From the root directory:
 
-### Bookings
-- `GET /api/bookings`
-- `POST /api/bookings`
-- `POST /api/bookings/:id/cancel`
-
-### Entry/Exit
-- `POST /api/access/:bookingId/entry`
-- `POST /api/access/:bookingId/exit`
-- `GET /api/access/:bookingId/logs`
-- `GET /api/access/photo/:photoId`
-
-### Payments
-- `GET /api/payments`
-
-### Notifications
-- `GET /api/notifications`
-- `POST /api/notifications/:id/read`
-
-## Important production upgrades
-
-- Use Razorpay/Stripe instead of the current demo payment form.
-- Add an operator/admin dashboard for manual plate-review cases.
-- Add QR code on the booking confirmation so a gate scanner can find the booking immediately.
-- Add automatic reservation expiry if a driver does not enter within the allowed grace period.
-- Add real-time slot updates with Socket.IO.
-- Add EV-only, disabled-access, and two-wheeler slot types.
-- Add audit logs for operator actions.
-- Move uploaded photos to S3/Cloud Storage in production rather than local disk.
-- Encrypt sensitive data at rest and apply strict retention/deletion rules for vehicle images.
-- Add rate limiting and account lockout/2FA for operator/admin accounts.
-
-## Admin panel
-
-A separate read-only admin panel is included at:
-
-`http://localhost:5000/admin`
-
-It uses the existing ParkSmart authentication and the existing MySQL data. The customer-facing UI and its existing booking/payment/entry-exit logic are not replaced.
-
-Admin panel features:
-- Dashboard summary
-- Users
-- Parking locations and slot status
-- All bookings
-- All payments
-- Entry/exit and plate-review logs
-- Search/filter tables
-- Refresh data
-
-The admin API is read-only and accepts only `ADMIN` or `OPERATOR` JWT roles. It does not update or delete customer data.
-
-Use an existing account whose `role` is `ADMIN` or `OPERATOR`. Normal `USER` accounts are intentionally rejected from the admin panel.
-
-## Admin login
-
-The admin version automatically creates or updates this dedicated admin account when the backend starts:
-
-```text
-Email: admin@gmail.com
-Password: raviraj@2007
-Role: ADMIN
-```
-
-Open `http://localhost:5000/admin` for the admin panel. The startup provisioning only changes the account with this exact email; existing customer accounts and their data are otherwise preserved.
-
-## Deploying to Vercel
-
-1. Push this repository to GitHub.
-2. In the [Vercel Dashboard](https://vercel.com/), click **Add New...** > **Project** and import this repository.
-3. Keep default settings (Root directory `./`, Framework: Other).
-4. Add the required Environment Variables under **Settings > Environment Variables**:
-   - `DB_HOST`: Host of your cloud MySQL database (e.g. TiDB Cloud, Aiven, Railway, AWS RDS)
-   - `DB_PORT`: `3306` (or provider's port)
-   - `DB_NAME`: `parksmart`
-   - `DB_USER`: Your cloud database user
-   - `DB_PASSWORD`: Your cloud database password
-   - `DB_SSL`: `true` (if your cloud MySQL provider requires SSL)
-   - `JWT_SECRET`: A long secure random string
-   - `ADMIN_EMAIL`: `admin@gmail.com`
-   - `ADMIN_PASSWORD`: `raviraj@2007`
-   - `UPLOAD_DIR`: `/tmp/uploads`
-5. Click **Deploy**. Vercel will host both the frontend and backend serverless API seamlessly using `vercel.json` and `api/index.js`.
+- `npm run dev` — Starts Next.js development server on port 3000
+- `npm run dev:backend` — Starts Express + MySQL backend on port 5000
+- `npm run check` — Validates TypeScript types across the Next.js application
+- `npm run check:backend` — Performs syntax check across all backend route and utility files
+- `npm run build` — Builds production bundle for Next.js
