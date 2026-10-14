@@ -4,7 +4,7 @@
    to the Node/Express API.
 */
 (() => {
-  const API = `${location.origin}/api`;
+  const API = 'https://smart-parking-api-v2.vercel.app/api';
   const state = {
     token: sessionStorage.getItem('parksmart_token') || localStorage.getItem('parksmart_token') || '',
     user: JSON.parse(sessionStorage.getItem('parksmart_user') || localStorage.getItem('parksmart_user') || 'null'),
